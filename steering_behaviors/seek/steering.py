@@ -45,12 +45,12 @@ class SteeringBehaviors:
         return self._flags & behavior > 0
 
     def seek_on(self):
-        self._toggleBehavior(Behavior.SEEK)
+        self.toggle_behavior(Behavior.SEEK)
 
     def seek_off(self):
-        self._toggleBehavior(Behavior.SEEK)
+        self.toggle_behavior(Behavior.SEEK)
 
-    def _toggleBehavior(self, behavior):
+    def toggle_behavior(self, behavior):
         self._flags ^= behavior
 
     #

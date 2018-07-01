@@ -1,6 +1,6 @@
 from actors import Vehicle, Crosshair
 from pygame.math import Vector2
-
+from steering import Behavior
 
 import pgzrun
     
@@ -30,6 +30,7 @@ class GameWorld:
         self._show_steering_force = True
         self._show_crosshair = True
 
+        self._behavior_flag = Behavior.SEEK
 
     def update(self, time_elapsed):
         if self.paused:
@@ -43,8 +44,8 @@ class GameWorld:
         for a in world.agents:
             a.draw()
 
-        self._crosshair.draw()
-        #surface.blit(target_surf, target_surf.get_rect(center=self.crosshair) )
+        if self.show_crosshair:
+            self._crosshair.draw()
         
     def render(self, surface):
         if self.render_crosshair:
@@ -97,9 +98,31 @@ class GameWorld:
         return self._show_steering_force
 
     @property
-    def render_crosshair(self):
+    def show_crosshair(self):
         return self._show_crosshair
 
+    @show_crosshair.setter
+    def show_crosshair(self, val):
+        self._show_crosshair = val
+
+##    def seek_on(self):
+##        self._behavior_flag |= Behavior.SEEK
+##
+##    def seek_off(self):
+##        if self.behavior_on(Behavior.SEEK):
+##            self._behavior_flag ^= Behavior.SEEK
+##
+##    def behavior_on(self, behavior):
+##        return self._behavior_flag & behavior > 0
+
+    def toggle_seek(self):
+        for a in self.agents:
+            a.toggle_behavior(Behavior.SEEK)
+
+
+
+
+        
 
 world = GameWorld(WIDTH,HEIGHT)
 
@@ -120,7 +143,12 @@ def on_key_down(key):
     pass
 
 def on_key_up(key):
-    pass
+
+    if key == keys.S:
+        world.toggle_seek()
+        
+    elif key == keys.C:
+        world.show_crosshair = not world.show_crosshair
 
 def on_mouse_down(pos):
     # move the target

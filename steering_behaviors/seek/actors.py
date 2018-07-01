@@ -76,7 +76,10 @@ class Vehicle(Actor2):
             
         self.pos = self.exact_pos
         self.angle = -self.velocity.as_polar()[1]
-        
+
+    def toggle_behavior(self,behavior):
+        self._steering.toggle_behavior(behavior)
+
 
     @property
     def velocity(self):
@@ -88,6 +91,8 @@ class Vehicle(Actor2):
 
     @property
     def world(self): return self._world
+
+    
 
 
 class Crosshair(Actor):
@@ -136,4 +141,4 @@ if __name__ == '__main__':
         screen.fill("white")        
         crosshair.draw()
 
-    pgzrun.go()
+#    pgzrun.go()
