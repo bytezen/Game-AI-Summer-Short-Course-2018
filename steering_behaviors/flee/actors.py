@@ -77,6 +77,7 @@ class Vehicle(Actor2):
         self.angle = -self.velocity.as_polar()[1]
 
     def toggle_behavior(self,behavior):
+        print("actor toggling behavior: ", behavior)
         self._steering.toggle_behavior(behavior)
 
 

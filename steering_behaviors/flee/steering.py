@@ -1,7 +1,6 @@
 from pygame.math import Vector2
 from enum import IntEnum
 
-
 class Behavior(IntEnum):
     NONE = 0,
     SEEK = 2,
@@ -21,11 +20,6 @@ class Behavior(IntEnum):
     FLOCK = 32768,
     OFFSET_PURSUIT = 65536
     
-class Decelaration(IntEnum):
-    SLOW = 3.0,
-    NORMAL = 2.0,
-    FAST = 1.0
-
     
 class SteeringBehaviors:
     def __init__(self, entity):
@@ -44,6 +38,9 @@ class SteeringBehaviors:
 
         if self.on(Behavior.SEEK):
             self._steering_force += self.seek( self._entity.world.crosshair )
+
+        if self.on(Behavior.FLEE):
+            self._steering_force += self.flee( self._entity.world.crosshair )
 
         if self.on(Behavior.ARRIVE):
             self._steering_force += self.arrive( self._entity.world.crosshair)
@@ -64,6 +61,12 @@ class SteeringBehaviors:
 
     def arrive_off(self):
         self.toggle_behavior(Behavior.ARRIVE)
+
+    def flee_on(self):
+        self.toggle_behavior(Behavior.FLEE)
+
+    def flee_off(self):
+        self.toggle_behavior(Behavior.FLEE)
         
     def toggle_behavior(self, behavior):
         self._flags ^= behavior
@@ -81,21 +84,20 @@ class SteeringBehaviors:
         return desiredVelocity - self._entity.velocity
 
 
-    def arrive(self,target, decelaration=Decelaration.NORMAL):
-        toTarget = target - self._entity.exact_pos
-        dist = toTarget.length()
-##        print(dist * dist)
-        if (dist * dist) > 1.0 :
-            decelarationTweak = 0.3
-            speed = dist * (decelaration * decelarationTweak )
-
-            speed = min(speed, self._entity.max_speed)
-
-            desiredVelocity = toTarget * ( speed / dist )
-            return desiredVelocity - self._entity.velocity
-        else:
-            return Vector2()
+    def flee(self,target):
+        desiredVelocity = self._entity.exact_pos - target
         
+        if desiredVelocity.length() > 0.0001:
+            desiredVelocity.normalize_ip()
+            desiredVelocity *= self._entity.max_speed
+
+        return desiredVelocity - self._entity.velocity
+
+
+    def arrive(self,target):
+        pass
+
+
         
 
 if __name__=='__main__':

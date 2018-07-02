@@ -4,7 +4,7 @@ from steering import Behavior
 
 import pgzrun
 
-TITLE = 'Steering Behavior - Arrive'    
+TITLE = 'Steering Behavior - Flee'    
 WIDTH = 800
 HEIGHT = 600
 
@@ -13,11 +13,11 @@ MAX_SPEED = 100 # pixels / second
 MAX_FORCE = 200 # pixels / second^2
 MAX_TURN_RATE = 50 # degrees / second
 INIT_VEL = (50,0)
-BEHAVIOR = Behavior.ARRIVE
+BEHAVIOR = Behavior.FLEE
 
 def create_agents():
     world.agents = []
-    vehicle = Vehicle(world=world,center=(400,10), mass=MASS, max_speed=MAX_SPEED, max_force=MAX_FORCE, max_turn_rate=MAX_TURN_RATE, vel=INIT_VEL)
+    vehicle = Vehicle(world=world,center=(400,300), mass=MASS, max_speed=MAX_SPEED, max_force=MAX_FORCE, max_turn_rate=MAX_TURN_RATE, vel=INIT_VEL)
     vehicle.toggle_behavior(BEHAVIOR)
     world.agents.append(vehicle)
     
@@ -94,9 +94,6 @@ class GameWorld:
         for a in self.agents:
             a.toggle_behavior(BEHAVIOR)
 
-
-
-
         
 
 world = GameWorld(WIDTH,HEIGHT)
@@ -108,7 +105,6 @@ def start():
 def update(dt):
     for a in world.agents:
         a.update(dt)
-
     
 def draw():
     screen.clear()
