@@ -1,6 +1,7 @@
 from pygame.math import Vector2
 from enum import IntEnum
 from random import random
+from params import WanderParams
 import pygame.gfxdraw
 import pgzrun
 
@@ -28,11 +29,11 @@ class Decelaration(IntEnum):
     NORMAL = 2.0,
     FAST = 1.0
 
-class Wander:
-    jitter = 5.0
-    radius = 50.0
-    distance = 50.0
-    target = Vector2(0,-1)
+##class Params:
+##    jitter = 5.0
+##    radius = 50.0
+##    distance = 50.0
+##    target = Vector2(0,-1)
     
 class SteeringBehaviors:
     def __init__(self, entity):
@@ -45,7 +46,7 @@ class SteeringBehaviors:
         self._steering_force = Vector2()
         self._flags = Behavior.NONE
 
-        self.wander_params = Wander()
+        self.wander_params = WanderParams()
         
 
     def calculate(self):
