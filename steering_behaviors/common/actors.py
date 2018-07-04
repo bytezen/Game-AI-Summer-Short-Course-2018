@@ -4,12 +4,20 @@ from pygame.math import Vector2
 from pgzero.actor import Actor
 from common.steering import SteeringBehaviors
 from math import cos,sin,degrees,radians
+from random import choice
 
 class Actor2(Actor):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self._angle = 0.0
         self._orig_surf = self._surf
+
+        # bounding radius
+        # assume that the dimensions of the image are the dimensions
+        # of the actor
+        self.bounding_radius = 0.5 * max(self._orig_surf.get_width(),
+                                         self._orig_surf.get_height())
+##        print('Actor2 init: ',args)
 
     @property
     def angle(self):
@@ -121,11 +129,6 @@ class Vehicle(Actor2):
     def target_actor(self, actor):
         self._target_actor = actor
         
-        
-
-        
-    
-
 
 class Crosshair(Actor):
     IMG_FILE = 'target'
@@ -133,8 +136,18 @@ class Crosshair(Actor):
     def __init__(self, *args,**kwargs):
         super().__init__(Crosshair.IMG_FILE,*args,**kwargs)
 
-        
-    
+
+class Obstacle(Actor):
+    IMG_FILE = 'obstacle'
+
+    def __init__(self,*args,**kwargs):
+        file = Obstacle.img_file()
+        print('creating obstacle from file: ',file)
+        super().__init__( Obstacle.img_file() ,*args, **kwargs)
+
+    @classmethod
+    def img_file(cls):
+        return Obstacle.IMG_FILE + str(choice(range(9)))
 
 
 def truncate_ip(vec,limit):

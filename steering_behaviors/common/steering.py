@@ -2,27 +2,29 @@ from pygame.math import Vector2
 from enum import IntEnum
 from random import random
 from common.params import WanderParams
+from common.params import ObstacleAvoidanceParams
+from common.behavior import Behavior
 import pygame.gfxdraw
 import pgzrun
 
-class Behavior(IntEnum):
-    NONE = 0,
-    SEEK = 2,
-    FLEE = 4,
-    ARRIVE = 8,
-    WANDER = 16,
-    COHESION = 32,
-    SEPARATION = 64,
-    ALIGNMENT = 128,
-    OBSTACLE_AVOIDANCE = 256,
-    WALL_AVOIDANCE = 512,
-    FOLLOW_PATH = 1024,
-    PURSUIT = 2048,
-    EVADE = 4096,
-    INTERPOSE = 8192,
-    HIDE = 16384,
-    FLOCK = 32768,
-    OFFSET_PURSUIT = 65536
+##class Behavior(IntEnum):
+##    NONE = 0,
+##    SEEK = 2,
+##    FLEE = 4,
+##    ARRIVE = 8,
+##    WANDER = 16,
+##    COHESION = 32,
+##    SEPARATION = 64,
+##    ALIGNMENT = 128,
+##    OBSTACLE_AVOIDANCE = 256,
+##    WALL_AVOIDANCE = 512,
+##    FOLLOW_PATH = 1024,
+##    PURSUIT = 2048,
+##    EVADE = 4096,
+##    INTERPOSE = 8192,
+##    HIDE = 16384,
+##    FLOCK = 32768,
+##    OFFSET_PURSUIT = 65536
     
 class Decelaration(IntEnum):
     SLOW = 3.0,
@@ -47,6 +49,7 @@ class SteeringBehaviors:
         self._flags = Behavior.NONE
 
         self.wander_params = WanderParams()
+        self.obstacle_params = ObstacleAvoidanceParams() 
         
 
     def calculate(self):
@@ -194,7 +197,6 @@ class SteeringBehaviors:
                              (random()*2.0-1.0) * jitter_this_time_slice )
 
         params.target += randomVec
-##        print("params.target after random vec {0} = {1} ".format(randomVec,params.target))
 
         # project the target onto a point on the unit circle
         params.target.normalize_ip()
@@ -202,29 +204,29 @@ class SteeringBehaviors:
         # increase the length of the vector to the same radius
         # of the wander circle
         params.target *= params.radius
-##        print('params.target projected onto radius', params.target)
 
-##        print('new params target = ',params.target)
         
         # move the wander circle in front of us
         target = params.target + Vector2(params.distance,0)
-##        print('target after adding distance offset', target)
+
+        # tramsform the target into world coordinates
         target.rotate_ip(entity.angle)
 
-##        print('target after rotating by {0} = {1}'.format(entity.angle,target))
-
-##        target += entity.exact_pos
-##        return target - entity.exact_pos   
-
-##        print('target after translating {0} = {1}'.format(entity.exact_pos, target))
-##        print('pos = ', entity.exact_pos)
-##        resVec = target - entity.exact_pos
-##        print('steering vector = {0} magnitude = {1}'.format(resVec,resVec.length()))
-
-##        print("--------- ------\n")
 
         return target
 
+##    def obstacle_avoidance(self, obstacles):
+##        params = self.obstacle_params
+##        entity = self._entity
+##        
+##        self.d_box_length = params.min_detection_box_length
+##        # the scale of the box length is dependent on our max_speed ratio
+##        speed_ratio = entity.speed / entity.max_speed
+##        self.d_box_length = self.d_box_length + speed_ratio * self.d_box_length
+##
+##        #tag obstacles that are within range of us
+##        
+        
 
     def render(self,screen):
         if self._entity.world.model.render_wander_circle \
