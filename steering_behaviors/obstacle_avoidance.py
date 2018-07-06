@@ -1,4 +1,5 @@
 from common.actors import Vehicle, Crosshair, Obstacle
+import common.actors as Actors
 from common.steering import Behavior
 import common.params as Params
 
@@ -23,6 +24,9 @@ def create_agents():
 ##    vehicle.pursuit_target = runner
     
     world.agents.append(vehicle)
+
+##def tag_neighbors(a, objs, dist):
+##    """ all actors(objs) that are within range(dist) of x are tagged"""
     
 
 class GameWorld:
@@ -33,17 +37,29 @@ class GameWorld:
         self._window_dim = Vector2(WIDTH,HEIGHT)
         self._crosshair = Crosshair((WIDTH*0.5, HEIGHT*0.5))
 
-        self._show_steering_force = True
-        self._show_crosshair = True
+##        self._show_steering_force = True
+
 
         self._behavior_flag = BEHAVIOR
         self.model = Model()
         
-        self.display_params = Params.DisplayParams()
+##        self.display_params = Params.DisplayParams()
         self.wander_params = Params.WanderParams()
         self.obstacle_params = Params.ObstacleParams()
         self.obstacles = []
 
+        #display flags
+        self.show_walls = False
+        self.show_obstacles = False
+        self.show_path = False
+        self.show_wander_circle = False
+        self.show_steering_force = False
+        self.show_feelers = False
+        self.show_detection_box = False
+        self.render_neighbors = False
+        self.view_keys = False
+        self.show_cell_space_info = False
+        self.show_crosshair = True
 
     def create_obstacles(self):
         max_trys = 2000
@@ -55,7 +71,7 @@ class GameWorld:
         obstacleDict = {}
         
         def add_obstacle(o):
-            obstacleDict[(o.left,o.top,o.width,o.height)] = obstacle_rect(o)
+            obstacleDict[(o.left,o.top,o.width,o.height)] = obstacle_rect(o).inflate_ip(20,20)
 
         def obstacle_rect(obstacle):
             return pygame.Rect(obstacle.left,obstacle.top,obstacle.width,obstacle.height)
@@ -87,7 +103,12 @@ class GameWorld:
                     add_obstacle(tryme)
                     break
                 
-        
+    def tag_obstacles_in_view_range(self, search_range):
+        #TODO: use cell space partitioning for this
+        Actors.tag_neighbors(vehicle, self.obstacles, search_range)
+
+
+
     def update(self, time_elapsed):
         if self.paused:
             return
@@ -97,26 +118,53 @@ class GameWorld:
 
 
     def draw(self):
-        display = self.display_params
-        
+##        display = self.display_params
+
+        if self.show_walls:
+            for w in self.walls:
+                w.draw()
+
+        if self.show_obstacles:
+            for o in self.obstacles:
+                o.draw()
+
+##
+##        self.show_walls = False
+##        self.show_obstacles = False
+##        self.show_path = False
+##        self.show_wander_circle = False
+##        self.show_steering_force = False
+##        self.show_feelers = False
+##        self.show_detection_box = False
+##        self.render_neighbors = False
+##        self.view_keys = False
+##        self.show_cell_space_info = False
+
+
+        # render the agents
         for a in world.agents:
             a.draw()
 ##            if a.on(Behavior.WANDER) and display.show_wander_config:
 ##                grab wander params from steering and params file
 ##                use pygame.gfx to draw to screen
-            if display.show_steering:
-                a._steering.render(screen)
 
-            if display.show_bounding_radius:
-                pygame.gfxdraw.aacircle(screen.surface, \
-                                        int(a.exact_pos.x),
-                                        int(a.exact_pos.y),
-                                        int(a.bounding_radius),
-                                        (50,0,255))
 
-            if display.show_obstacles:
-                for o in self.obstacles:
-                    o.draw()
+            if self.show_cell_space_info:
+                pass
+            
+##            if display.show_render_aids:
+##                a._steering.render_aids(screen)
+##                
+##            if display.show_steering:
+##                a._steering.render(screen)
+
+##            if self.show_bounding_radius:
+##                pygame.gfxdraw.aacircle(screen.surface, \
+##                                        int(a.exact_pos.x),
+##                                        int(a.exact_pos.y),
+##                                        int(a.bounding_radius),
+##                                        (50,0,255))
+
                     
         if self.show_crosshair:
             self._crosshair.draw()
