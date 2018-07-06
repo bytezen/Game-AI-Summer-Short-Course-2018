@@ -2,23 +2,59 @@
 from pygame import transform
 from pygame.math import Vector2
 from pgzero.actor import Actor
+import pygame.gfxdraw as gfxdraw
+import pygame as pg
+
 from common.steering import SteeringBehaviors
 from math import cos,sin,degrees,radians
 from random import choice
+
+
+
+def tag_neighbors(a, objs, dist):
+    """ all actors(objs) that are within range(dist) of x are tagged"""
+
+    #clear tags
+    for o in objs:
+        o.untag()
+
+        if a == o:
+            continue
+        
+        to = o.exact_pos - a.exact_pos
+        
+        #account for the bounding radius of the other object search range
+        rng = dist + o.bounding_radius
+
+        if to.length_squared() < ( rng * rng ):
+            o.tag()
+
 
 class Actor2(Actor):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self._angle = 0.0
         self._orig_surf = self._surf
-
+        self._tag = False
         # bounding radius
         # assume that the dimensions of the image are the dimensions
         # of the actor
         self.bounding_radius = 0.5 * max(self._orig_surf.get_width(),
                                          self._orig_surf.get_height())
+        self.exact_pos = Vector2(self.pos)        
 ##        print('Actor2 init: ',args)
 
+
+    def tag(self):
+        self._tag = True
+        
+    def untag(self):
+        self._tag = False
+
+    @property
+    def tagged(self):
+        return self._tag
+    
     @property
     def angle(self):
         return self._angle
@@ -31,7 +67,8 @@ class Actor2(Actor):
         self.width, self.height = self._surf.get_size()
         self._calc_anchor()
         self.pos = pos
-        self.heading = Vector2(cos(radians(angle)), sin(radians(angle)))
+        
+##        self.heading = Vector2(cos(radians(angle)), sin(radians(angle)))
 
     
 class Vehicle(Actor2):
@@ -46,7 +83,8 @@ class Vehicle(Actor2):
     # This class will also handle the image for the Vehicle internally.
     def __init__(self,world,vel,mass,max_speed,max_turn_rate,max_force,**kwargs):
 
-        self._velocity = Vector2(vel)
+        # this will also initialize our heading and our side vector
+        self.velocity = Vector2(vel)
         self.max_speed = max_speed
         self._max_turn_rate = max_turn_rate
         self._max_force = max_force
@@ -65,8 +103,8 @@ class Vehicle(Actor2):
         #if  not ('pos' in kwargs):
          #   raise ValueError("you must specify a pos arg. See pygamezero Actor documentation")
         
-        self.exact_pos = Vector2(self.pos)
-        self.angle = self.velocity.as_polar()[1]
+##        self.exact_pos = Vector2(self.pos)
+        self.angle = -self.heading.as_polar()[1]
 
         self.time_elapsed = 0.0
 
@@ -91,11 +129,30 @@ class Vehicle(Actor2):
             self.side = self.heading.rotate(90)
             
         self.pos = self.exact_pos
-        self.angle = -self.velocity.as_polar()[1]
+
+        # positive is counterclockwise,but we want to rotate clockwise for positive
+        self.angle = -self.heading.as_polar()[1]
+
+
 
     def toggle_behavior(self,behavior):
         self._steering.toggle_behavior(behavior)
 
+
+    def draw(self,surface):
+        super().draw()
+
+        if self._world.view_keys:
+            self._steering.render_aids(surface)
+
+        if self.visual_debug:
+            #show heading and side
+            gfxdraw.line(surface,
+                                  int(self.exact_pos.x),
+                                  int(self.exact_pos.y),
+                                  int(self.exact_pos.x + 20 * self.heading.x),
+                                  int(self.exact_pos.y + 20 * self.heading.y),
+                                  pg.Color(255,255,0))
 
     @property
     def velocity(self):
@@ -104,9 +161,17 @@ class Vehicle(Actor2):
     @velocity.setter
     def velocity(self,vec):
         self._velocity = Vector2(vec)
-        self.heading = Vector2(cos(radians(self.angle)), sin(radians(self.angle)))
+        self.heading = self.velocity.normalize()
         self.side = self.heading.rotate(90)
 
+    @property
+    def heading(self):
+        return self._heading
+    
+    @heading.setter
+    def heading(self,*args):
+        self._heading = Vector2(*args)
+        
     @property
     def speed(self): return self.velocity.length()
     
@@ -130,14 +195,14 @@ class Vehicle(Actor2):
         self._target_actor = actor
         
 
-class Crosshair(Actor):
+class Crosshair(Actor2):
     IMG_FILE = 'target'
     
     def __init__(self, *args,**kwargs):
         super().__init__(Crosshair.IMG_FILE,*args,**kwargs)
 
 
-class Obstacle(Actor):
+class Obstacle(Actor2):
     IMG_FILE = 'obstacle'
 
     def __init__(self,*args,**kwargs):

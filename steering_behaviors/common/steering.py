@@ -269,10 +269,28 @@ class SteeringBehaviors:
                             dist_to_closest_intersection_point = ip
                             cib = o
                             local_pos_of_closest_obstacle = local_pos
-        
 
-    def render(self,screen):
-        if self._entity.world.model.render_wander_circle \
+##
+##        self.show_walls = False
+##        self.show_obstacles = False
+##        self.show_path = False
+##        self.show_wander_circle = False
+##        self.show_steering_force = False
+##        self.show_feelers = False
+##        self.show_detection_box = False
+##        self.render_neighbors = False
+##        self.view_keys = False
+##        self.show_cell_space_info = False        
+
+    def render_aids(self,surface):
+        world = self._entity.world
+
+        # Render Steering Force
+        if world.show_steering_force:
+            pass
+
+        # Render Wander if relevant     
+        if world.show_wander_circle \
            and self.on(Behavior.WANDER):
 
             params = self.wander_params
@@ -283,18 +301,43 @@ class SteeringBehaviors:
             wander_center += self._entity.exact_pos
                         
             # draw the wander cirle
-            pygame.gfxdraw.aacircle(screen.surface, \
+            pygame.gfxdraw.aacircle(surface, \
                                     int(wander_center.x),
                                     int(wander_center.y),
                                     int(self.wander_params.radius),
                                     (255,0,0))
         
 
-            #draw the target point
+            #draw the wander target
             wander_target = self.wander_params.target.rotate(self._entity.angle)
             wander_target += wander_center #self._entity.exact_pos
-            pygame.gfxdraw.filled_circle(screen.surface,
+            pygame.gfxdraw.filled_circle(surface,
                                          int(wander_target.x),
                                          int(wander_target.y),
                                          5,
                                          (255,255,0))
+
+        # Render Detection Box if relevant
+        if world.show_detection_box and self.id == 0:
+            minLen = ObstacleAvoidanceParams.min_detection_box_length
+            # the length is a function of how fast we are going
+            # the closer we get to maximum speed the longer the length
+
+            # calculate the verts for the detection box in local space coordinates, relative
+            # to the vehicle of interest
+            length = minLen + (minLen * (self._entity.speed / self._entity.max_speed) )
+            tl = Vector2( 0, -self._entity.bounding_radius )
+            tr = tl + Vector2(length, 0)
+            br = tr + Vector2(0, 2 * self._entity.bounding_radius)
+            bl = br - Vector2(length, 0)
+            close = bl + Vector2(0,-2 * self._entity.bounding_radius)
+
+            #get rectangle in world space coordinates for rendering
+
+                        
+            rect_verts_world_space = point_to_world_space([tl,tr,br,bl,close],
+                                                          self._entity.exact_pos,
+                                                          self._entity.heading,
+                                                          self._entity.normal
+                                                          )
+            
