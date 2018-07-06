@@ -56,40 +56,51 @@ class SteeringBehaviors:
     def calculate(self):
         self._steering_force *= 0
 
-        if self.on(Behavior.SEEK):
+        if self.is_on(Behavior.SEEK):
             print('seek on')
             self._steering_force += self.seek( self._entity.world.crosshair )
 
-        if self.on(Behavior.ARRIVE):
+        if self.is_on(Behavior.ARRIVE):
             print('arrive on')            
             self._steering_force += self.arrive( self._entity.world.crosshair)
 
-        if self.on(Behavior.FLEE):
+        if self.is_on(Behavior.FLEE):
             print('flee on')                        
             self._steering_force += self.flee( self._entity.world.crosshair)
             
-        if self.on(Behavior.PURSUIT):
+        if self.is_on(Behavior.PURSUIT):
             print('pursuit on')                        
             self._steering_force += self.pursuit( self._entity.pursuit_target )
             
-        if self.on(Behavior.EVADE):
+        if self.is_on(Behavior.EVADE):
             print('evade on')                        
             self._steering_force += self.evade( self._entity.target_actor )
 
-        if self.on(Behavior.WANDER):
+        if self.is_on(Behavior.WANDER):
 ##            print('wander on')                        
             self._steering_force += self.wander()
             
         return self._steering_force
 
     def on(self, behavior):
+        self._flags |= behavior
+
+    def off(self, behavior):
+        if self.is_on(behavior):
+            self.toggle_behavior(behavior)
+
+    def all_off(self):
+        self._flags = Behavior.NONE
+            
+    def is_on(self, behavior):
         return self._flags & behavior > 0
 
     def seek_on(self):
-        self.toggle_behavior(Behavior.SEEK)
+        self._flags |= Behavior.SEEK
 
     def seek_off(self):
-        self.toggle_behavior(Behavior.SEEK)
+        if on(Behavior.SEEK):
+            self.toggle_behavior(Behavior.SEEK)        
 
     def arrive_on(self):
         self.toggle_behavior(Behavior.ARRIVE)
@@ -291,7 +302,7 @@ class SteeringBehaviors:
 
         # Render Wander if relevant     
         if world.show_wander_circle \
-           and self.on(Behavior.WANDER):
+           and self.is_on(Behavior.WANDER):
 
             params = self.wander_params
 

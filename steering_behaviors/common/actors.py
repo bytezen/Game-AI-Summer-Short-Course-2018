@@ -6,6 +6,7 @@ import pygame.gfxdraw as gfxdraw
 import pygame as pg
 
 from common.steering import SteeringBehaviors
+from common.behavior import Behavior
 from math import cos,sin,degrees,radians
 from random import choice
 
@@ -135,10 +136,35 @@ class Vehicle(Actor2):
         self.angle = -self.heading.as_polar()[1]
 
 
+    def obstacle_avoidance_on(self):
+        self.behavior_on(Behavior.OBSTACLE_AVOIDANCE)
 
-    def toggle_behavior(self,behavior):
+    def obstacle_avoidance_off(self):
+        self.behavior_off(Behavior.OBSTACLE_AVOIDANCE)
+
+    def behavior_on(self, behavior):
+        self._steering.on(behavior)
+
+    def is_behavior_on(self, behavior):
+        return self._steering.is_on(behavior)
+        
+    def behavior_off(self, behavior):
+        self._steering.off(behavior)
+
+    def behavior_all_off(self):
+        self._steering.all_off()
+        
+    def is_behavior_off(self, behavior):
+        return not self.is_behavior_on(behavior)
+        
+
+    def toggle_behavior(self, behavior):
         self._steering.toggle_behavior(behavior)
 
+##    def toggle_behavior(self,behavior):
+##        self._steering.toggle_behavior(behavior)
+
+##    def obstacle_avoidance_on(self): self._steering.
 
     def draw(self,surface):
         super().draw()
@@ -146,7 +172,6 @@ class Vehicle(Actor2):
         if self._world.view_keys:
             self._steering.render_aids(surface)
 
-        if self.visual_debug:
             #show heading and side
             if self._world.show_heading:
                 gfxdraw.line(surface,
@@ -169,7 +194,10 @@ class Vehicle(Actor2):
                              
                              
                 pass
-                
+
+    @property
+    def behavior(self):
+        return self._steering._flags    
 
     @property
     def velocity(self):
