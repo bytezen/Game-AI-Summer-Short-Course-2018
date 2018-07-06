@@ -4,6 +4,7 @@ from random import random
 from common.params import WanderParams
 from common.params import ObstacleAvoidanceParams
 from common.behavior import Behavior
+import common.transformations as Tx
 import pygame.gfxdraw
 import pgzrun
 
@@ -215,17 +216,59 @@ class SteeringBehaviors:
 
         return target
 
-##    def obstacle_avoidance(self, obstacles):
-##        params = self.obstacle_params
-##        entity = self._entity
-##        
-##        self.d_box_length = params.min_detection_box_length
-##        # the scale of the box length is dependent on our max_speed ratio
-##        speed_ratio = entity.speed / entity.max_speed
-##        self.d_box_length = self.d_box_length + speed_ratio * self.d_box_length
-##
-##        #tag obstacles that are within range of us
-##        
+    def obstacle_avoidance(self, obstacles):
+        params = self.obstacle_params
+        entity = self._entity
+        
+        self.d_box_length = params.min_detection_box_length
+        # the scale of the box length is dependent on our max_speed ratio
+        speed_ratio = entity.speed / entity.max_speed
+        self.d_box_length = self.d_box_length + speed_ratio * self.d_box_length
+
+        #tag obstacles that are within range of our detection box
+        entity.world.tag_obstacles_in_view_range( self.d_box_length )
+
+##        closest_intersecting_obstacle
+        cib = None
+        
+        # track the distance to the cib
+        dist_to_closest_intersection_point = 1000000
+
+        local_pos_of_closest_obstacle = Vector2()
+
+        for o in entity.world.obstacles:
+            if o.tagged:
+##                point, agent_heading, agent_side, agent_position):                
+                local_pos = Tx.point_to_local_space(o.exact_pos,
+                                                    entity.heading,
+                                                    entity.normal,
+                                                    entity.exact_pos)
+
+                # if local_pos is less than 0 it is behind us so we can ignore it
+                if local_pos >= 0:
+                    # if the distance from the x axis to the object's position is
+                    # less than its radius + half the width of the detection box then
+                    # there is a potential intersection
+                    expanded_radius = o.bounding_radius + entity.bounding_radius
+
+                    if math.abs(local_pos.y) < expanded_radius:
+                        # now do a line/circle intersection test. The center of the circle
+                        # is (cx,cy) The intersection points are
+                        # given by the formula x = cx +/- sqrt(r^2 - cy^2) for y = 0.
+                        # We only need to look at the smallest positive value of x because
+                        # that will be the closest point of intersection
+                        sqrt_part = sqrt(expanded_radius * expanded_radius - cy * cy)
+                        cx = local_pos.x
+                        cy = local_pos.y
+                        ip = cx - sqrt_part
+
+                        if ip <= 0.0:
+                            ip = cx + sqrt_part
+
+                        if ip < dist_to_closest_intersection_point:
+                            dist_to_closest_intersection_point = ip
+                            cib = o
+                            local_pos_of_closest_obstacle = local_pos
         
 
     def render(self,screen):
