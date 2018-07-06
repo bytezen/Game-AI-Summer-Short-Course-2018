@@ -90,6 +90,7 @@ class Vehicle(Actor2):
         self._max_force = max_force
         self.mass = mass
         self._target_actor = None
+        self.steering_force = Vector2()
 
         # create a reference to steering behavior and
         # pass a reference of ourselves to it
@@ -112,11 +113,11 @@ class Vehicle(Actor2):
         #some behaviors need to know the time since the last update
         self.time_elapsed = dt
         
-        steering_force = self._steering.calculate()
+        self.steering_force = self._steering.calculate()
 
 ##        print('***** STEERING FORCE = ', steering_force)
 
-        accel = steering_force / self.mass
+        accel = self.steering_force / self.mass
 ##        print("      VElocity before accel = ", self.velocity)
         self.velocity += accel * dt
 ##        print("      VElocity AFTER accel = ", self.velocity)        
@@ -147,12 +148,28 @@ class Vehicle(Actor2):
 
         if self.visual_debug:
             #show heading and side
-            gfxdraw.line(surface,
-                                  int(self.exact_pos.x),
-                                  int(self.exact_pos.y),
-                                  int(self.exact_pos.x + 20 * self.heading.x),
-                                  int(self.exact_pos.y + 20 * self.heading.y),
-                                  pg.Color(255,255,0))
+            if self._world.show_heading:
+                gfxdraw.line(surface,
+                             int(self.exact_pos.x),
+                             int(self.exact_pos.y),
+                             int(self.exact_pos.x + 20 * self.heading.x),
+                             int(self.exact_pos.y + 20 * self.heading.y),
+                             pg.Color(200,200,200))
+
+            if self._world.show_steering_force:
+                f = self.steering_force / self._max_force
+                f *= 100
+                gfxdraw.line(surface,
+                             int(self.exact_pos.x),
+                             int(self.exact_pos.y),
+                             int(self.exact_pos.x + f.x),
+                             int(self.exact_pos.y + f.y),
+                             pg.Color(200,0,0))
+                             
+                             
+                             
+                pass
+                
 
     @property
     def velocity(self):

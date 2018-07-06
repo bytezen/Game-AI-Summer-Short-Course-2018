@@ -11,7 +11,7 @@ class ObstacleAvoidanceParams:
     min_detection_box_length = 50
 
 class ObstacleParams:
-    number = 15
+    number = 0
 
 class VehicleParams:
     mass = 1.0
@@ -22,9 +22,11 @@ class VehicleParams:
     init_behavior = [Behavior.NONE]
 
 class DisplayParams:
+    show_render_aids = True
     show_bounding_radius = True
     show_steering = False
     show_obstacles = True
+    show_crosshair = True
     
 
 

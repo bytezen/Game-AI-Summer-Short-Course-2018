@@ -82,15 +82,19 @@ class GameWorld:
         self.obstacles = []
 
         #display flags
+        self.view_keys = True
+        
         self.show_walls = False
         self.show_obstacles = False
         self.show_path = False
         self.show_wander_circle = False
-        self.show_steering_force = False
+        self.show_steering_force = True
+        self.show_heading = False
         self.show_feelers = False
         self.show_detection_box = False
         self.render_neighbors = False
-        self.view_keys = False
+
+
         self.show_cell_space_info = False
         self.show_crosshair = False
 
