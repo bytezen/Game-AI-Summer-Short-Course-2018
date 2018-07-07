@@ -91,9 +91,9 @@ class GameWorld:
             overlapped = True
 
             #create an obstacle
-##            tryme = Obstacle(pos = (random.randint(0.05*WIDTH ,0.95*WIDTH),
-##                                    random.randint(0.05*HEIGHT, 0.95*HEIGHT)))
-            tryme = Obstacle(pos = (0.25* WIDTH, 0.5* HEIGHT))            
+            tryme = Obstacle(pos = (random.randint(0.05*WIDTH ,0.95*WIDTH),
+                                    random.randint(0.05*HEIGHT, 0.95*HEIGHT)))
+##            tryme = Obstacle(pos = (0.25* WIDTH, 0.5* HEIGHT))            
                             
             while overlapped == True:
                 num_trys += 1
