@@ -11,7 +11,7 @@ class ObstacleAvoidanceParams:
     min_detection_box_length = 50
 
 class ObstacleParams:
-    number = 0
+    number = 1
 
 class VehicleParams:
     mass = 1.0

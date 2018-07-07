@@ -124,6 +124,8 @@ class GameWorld:
             #create an obstacle
             tryme = Obstacle(pos = (random.randint(0.05*WIDTH ,0.95*WIDTH),
                                     random.randint(0.05*HEIGHT, 0.95*HEIGHT)))
+
+
             
                             
             while overlapped == True:
@@ -312,6 +314,7 @@ def on_mouse_down(pos):
 
 start()
 pgzrun.go()
+
 
 
 

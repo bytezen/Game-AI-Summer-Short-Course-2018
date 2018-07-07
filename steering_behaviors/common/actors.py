@@ -12,20 +12,21 @@ from random import choice
 
 
 
-def tag_neighbors(a, objs, dist):
+def tag_neighbors(actor, objs, dist):
     """ all actors(objs) that are within range(dist) of x are tagged"""
-
+##    print('ATTEMPT to tag_neighbors')
     #clear tags
     for o in objs:
         o.untag()
 
-        if a == o:
+        if actor == o:
             continue
         
-        to = o.exact_pos - a.exact_pos
-        
+        to = o.exact_pos - actor.exact_pos
         #account for the bounding radius of the other object search range
         rng = dist + o.bounding_radius
+        
+##        print('{tag_neighbors.to} ', to, str(to.length_squared()),str(rng*rng) )
 
         if to.length_squared() < ( rng * rng ):
             o.tag()
@@ -143,15 +144,18 @@ class Vehicle(Actor2):
         self.behavior_off(Behavior.OBSTACLE_AVOIDANCE)
 
     def behavior_on(self, behavior):
+        print('turning on behavior: ', Behavior.str(behavior))
         self._steering.on(behavior)
 
     def is_behavior_on(self, behavior):
         return self._steering.is_on(behavior)
         
     def behavior_off(self, behavior):
+        print('turning off behavior: ', Behavior.str(behavior))        
         self._steering.off(behavior)
 
     def behavior_all_off(self):
+        print('turning off all behaviors: ')        
         self._steering.all_off()
         
     def is_behavior_off(self, behavior):

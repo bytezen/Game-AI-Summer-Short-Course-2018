@@ -1,6 +1,7 @@
 from pygame.math import Vector2
 from enum import IntEnum
 from random import random
+from math import sqrt
 from common.params import WanderParams
 from common.params import ObstacleAvoidanceParams
 from common.behavior import Behavior
@@ -57,28 +58,25 @@ class SteeringBehaviors:
         self._steering_force *= 0
 
         if self.is_on(Behavior.SEEK):
-            print('seek on')
             self._steering_force += self.seek( self._entity.world.crosshair )
 
-        if self.is_on(Behavior.ARRIVE):
-            print('arrive on')            
+        if self.is_on(Behavior.ARRIVE):     
             self._steering_force += self.arrive( self._entity.world.crosshair)
 
-        if self.is_on(Behavior.FLEE):
-            print('flee on')                        
+        if self.is_on(Behavior.FLEE):             
             self._steering_force += self.flee( self._entity.world.crosshair)
             
-        if self.is_on(Behavior.PURSUIT):
-            print('pursuit on')                        
+        if self.is_on(Behavior.PURSUIT):                  
             self._steering_force += self.pursuit( self._entity.pursuit_target )
             
-        if self.is_on(Behavior.EVADE):
-            print('evade on')                        
+        if self.is_on(Behavior.EVADE):             
             self._steering_force += self.evade( self._entity.target_actor )
 
-        if self.is_on(Behavior.WANDER):
-##            print('wander on')                        
+        if self.is_on(Behavior.WANDER):                  
             self._steering_force += self.wander()
+
+        if self.is_on(Behavior.OBSTACLE_AVOIDANCE):
+            self._steering_force += self.obstacle_avoidance( self._entity.world.obstacles )
             
         return self._steering_force
 
@@ -94,19 +92,6 @@ class SteeringBehaviors:
             
     def is_on(self, behavior):
         return self._flags & behavior > 0
-
-    def seek_on(self):
-        self._flags |= Behavior.SEEK
-
-    def seek_off(self):
-        if on(Behavior.SEEK):
-            self.toggle_behavior(Behavior.SEEK)        
-
-    def arrive_on(self):
-        self.toggle_behavior(Behavior.ARRIVE)
-
-    def arrive_off(self):
-        self.toggle_behavior(Behavior.ARRIVE)
         
     def toggle_behavior(self, behavior):
         self._flags ^= behavior
@@ -230,6 +215,7 @@ class SteeringBehaviors:
     def obstacle_avoidance(self, obstacles):
         params = self.obstacle_params
         entity = self._entity
+        steering_force = Vector2()
         
         self.d_box_length = params.min_detection_box_length
         # the scale of the box length is dependent on our max_speed ratio
@@ -237,10 +223,10 @@ class SteeringBehaviors:
         self.d_box_length = self.d_box_length + speed_ratio * self.d_box_length
 
         #tag obstacles that are within range of our detection box
-        entity.world.tag_obstacles_in_view_range( self.d_box_length )
+        entity.world.tag_obstacles_in_view_range( entity, obstacles, self.d_box_length )
 
 ##        closest_intersecting_obstacle
-        cib = None
+        closest_obstacle = None
         
         # track the distance to the cib
         dist_to_closest_intersection_point = 1000000
@@ -252,34 +238,59 @@ class SteeringBehaviors:
 ##                point, agent_heading, agent_side, agent_position):                
                 local_pos = Tx.point_to_local_space(o.exact_pos,
                                                     entity.heading,
-                                                    entity.normal,
+                                                    entity.side,
                                                     entity.exact_pos)
 
                 # if local_pos is less than 0 it is behind us so we can ignore it
-                if local_pos >= 0:
+                if local_pos.x >= 0:
                     # if the distance from the x axis to the object's position is
                     # less than its radius + half the width of the detection box then
                     # there is a potential intersection
                     expanded_radius = o.bounding_radius + entity.bounding_radius
 
-                    if math.abs(local_pos.y) < expanded_radius:
+                    if abs(local_pos.y) < expanded_radius:
                         # now do a line/circle intersection test. The center of the circle
                         # is (cx,cy) The intersection points are
                         # given by the formula x = cx +/- sqrt(r^2 - cy^2) for y = 0.
                         # We only need to look at the smallest positive value of x because
                         # that will be the closest point of intersection
-                        sqrt_part = sqrt(expanded_radius * expanded_radius - cy * cy)
                         cx = local_pos.x
-                        cy = local_pos.y
+                        cy = local_pos.y                        
+                        sqrt_part = sqrt(expanded_radius * expanded_radius - cy * cy)
+
                         ip = cx - sqrt_part
 
                         if ip <= 0.0:
                             ip = cx + sqrt_part
 
+                        # if this intersection point is smaller thatn our current closest
+                        # then update our tracking variables with the information for this
+                        # obstacle
                         if ip < dist_to_closest_intersection_point:
                             dist_to_closest_intersection_point = ip
-                            cib = o
+                            closest_obstacle = o
                             local_pos_of_closest_obstacle = local_pos
+
+
+        # if we have an object that is closest (i.e. within range)
+        if  closest_obstacle != None:
+            # the closer the actor is to the object, the stronger the
+            # steering force should be
+            multiplier = 1.0 + ( self.d_box_length - local_pos_of_closest_obstacle.x) / self.d_box_length
+
+            #calculate the lateral force
+            steering_force.y = multiplier * \
+                               (closest_obstacle.bounding_radius - local_pos_of_closest_obstacle.y)
+
+            #apply a braking force proportional to the obstacle's distance from the vehicle
+            braking_weight = 0.2
+
+            steering_force.x = braking_weight * \
+                               (closest_obstacle.bounding_radius - local_pos_of_closest_obstacle.x)
+
+        #convert the steering force from local to world space
+        return Tx.vector_to_world_space(steering_force, entity.heading, entity.side)
+
 
 ##
 ##        self.show_walls = False
@@ -294,7 +305,8 @@ class SteeringBehaviors:
 ##        self.show_cell_space_info = False        
 
     def render_aids(self,surface):
-        world = self._entity.world
+        entity = self._entity
+        world = entity.world
 
         # Render Steering Force
         if world.show_steering_force:
@@ -329,26 +341,35 @@ class SteeringBehaviors:
                                          (255,255,0))
 
         # Render Detection Box if relevant
-        if world.show_detection_box and self.id == 0:
+
+        #only for main vehicle
+        if entity.is_behavior_on(Behavior.OBSTACLE_AVOIDANCE) and world.show_detection_box: # and self.id == 0:
             minLen = ObstacleAvoidanceParams.min_detection_box_length
             # the length is a function of how fast we are going
             # the closer we get to maximum speed the longer the length
 
             # calculate the verts for the detection box in local space coordinates, relative
             # to the vehicle of interest
-            length = minLen + (minLen * (self._entity.speed / self._entity.max_speed) )
-            tl = Vector2( 0, -self._entity.bounding_radius )
+            if entity.max_speed > 0:
+                speed_ratio = entity.speed / entity.max_speed
+            else:
+                speed_ratio = 1.0
+                
+            length = minLen + (minLen * speed_ratio )
+            tl = Vector2( 0, -entity.bounding_radius )
             tr = tl + Vector2(length, 0)
-            br = tr + Vector2(0, 2 * self._entity.bounding_radius)
-            bl = br - Vector2(length, 0)
-            close = bl + Vector2(0,-2 * self._entity.bounding_radius)
+            br = tr + Vector2(0, 2 * entity.bounding_radius)
+            bl = br - Vector2(length, 1)
+            close = bl + Vector2(0,-2 * entity.bounding_radius)
 
             #get rectangle in world space coordinates for rendering
 
                         
-            rect_verts_world_space = point_to_world_space([tl,tr,br,bl,close],
-                                                          self._entity.exact_pos,
-                                                          self._entity.heading,
-                                                          self._entity.normal
-                                                          )
-            
+            rect_verts_world_space = Tx.point_to_world_space([tl,tr,br,bl],
+                                                             entity.exact_pos,
+                                                             entity.heading,
+                                                             entity.side
+                                                             )
+                
+            pygame.gfxdraw.aapolygon( surface, rect_verts_world_space, (0,200,0))
+

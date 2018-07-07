@@ -1,19 +1,20 @@
 from common.actors import Vehicle, Crosshair, Obstacle
 import common.actors as Actors
-from common.steering import Behavior
+from common.behavior import Behavior
 import common.params as Params
 
 from pygame.math import Vector2
 import pygame.gfxdraw
+import pygame as pg
 import random
 ##from wander_steering import Behavior
 
 import pgzrun
 
 
-class Model():
-    render_wander_circle = True
-    show_steering_force = False
+##class Model():
+##    render_wander_circle = True
+##    show_steering_force = False
     
 
 def create_agents():
@@ -39,27 +40,32 @@ class GameWorld:
 
 ##        self._show_steering_force = True
 
-
         self._behavior_flag = BEHAVIOR
-        self.model = Model()
+##        self.model = Model()
         
 ##        self.display_params = Params.DisplayParams()
         self.wander_params = Params.WanderParams()
         self.obstacle_params = Params.ObstacleParams()
         self.obstacles = []
 
+
         #display flags
+        self.view_keys = True
+        
         self.show_walls = False
-        self.show_obstacles = False
+        self.show_obstacles = True
         self.show_path = False
         self.show_wander_circle = False
-        self.show_steering_force = False
+        self.show_steering_force = True
+        self.show_heading = False
         self.show_feelers = False
-        self.show_detection_box = False
+        self.show_detection_box = True
         self.render_neighbors = False
-        self.view_keys = False
+        self.show_tagged = True
+
+
         self.show_cell_space_info = False
-        self.show_crosshair = True
+        self.show_crosshair = False
 
     def create_obstacles(self):
         max_trys = 2000
@@ -74,7 +80,7 @@ class GameWorld:
             obstacleDict[(o.left,o.top,o.width,o.height)] = obstacle_rect(o).inflate_ip(20,20)
 
         def obstacle_rect(obstacle):
-            return pygame.Rect(obstacle.left,obstacle.top,obstacle.width,obstacle.height)
+            return pg.Rect(obstacle.left,obstacle.top,obstacle.width,obstacle.height)
         
         #build dictionary from existing obstacles (should be empty initially)
         for o in self.obstacles:
@@ -85,9 +91,9 @@ class GameWorld:
             overlapped = True
 
             #create an obstacle
-            tryme = Obstacle(pos = (random.randint(0.05*WIDTH ,0.95*WIDTH),
-                                    random.randint(0.05*HEIGHT, 0.95*HEIGHT)))
-            
+##            tryme = Obstacle(pos = (random.randint(0.05*WIDTH ,0.95*WIDTH),
+##                                    random.randint(0.05*HEIGHT, 0.95*HEIGHT)))
+            tryme = Obstacle(pos = (0.25* WIDTH, 0.5* HEIGHT))            
                             
             while overlapped == True:
                 num_trys += 1
@@ -103,9 +109,9 @@ class GameWorld:
                     add_obstacle(tryme)
                     break
                 
-    def tag_obstacles_in_view_range(self, search_range):
+    def tag_obstacles_in_view_range(self, actor, objs, search_range):
         #TODO: use cell space partitioning for this
-        Actors.tag_neighbors(vehicle, self.obstacles, search_range)
+        Actors.tag_neighbors(actor, objs , search_range)
 
 
 
@@ -117,16 +123,23 @@ class GameWorld:
             a.update(time_elapsed)
 
 
-    def draw(self):
+    def draw(self,surface):
 ##        display = self.display_params
 
         if self.show_walls:
             for w in self.walls:
-                w.draw()
+                w.draw(surface)
 
         if self.show_obstacles:
             for o in self.obstacles:
                 o.draw()
+
+                if self.show_tagged and o.tagged:
+                    pygame.gfxdraw.aacircle(surface,
+                                            int(o.exact_pos.x),
+                                            int(o.exact_pos.y),
+                                            int(o.bounding_radius),
+                                            (200,200,0)) 
 
 ##
 ##        self.show_walls = False
@@ -143,7 +156,7 @@ class GameWorld:
 
         # render the agents
         for a in world.agents:
-            a.draw()
+            a.draw(surface)
 ##            if a.on(Behavior.WANDER) and display.show_wander_config:
 ##                grab wander params from steering and params file
 ##                use pygame.gfx to draw to screen
@@ -217,16 +230,16 @@ class GameWorld:
 
 
 
-TITLE = 'Steering Behavior - Evade'    
+TITLE = 'Steering Behavior - Obstacle Avoidance'    
 WIDTH = 800
 HEIGHT = 600
 
 MASS = 1.0
-MAX_SPEED = 10 # pixels / second
+MAX_SPEED = 50 # pixels / second
 MAX_FORCE = 100 # pixels / second^2
 MAX_TURN_RATE = 50 # degrees / second
-INIT_VEL = (10,0)
-BEHAVIOR = Behavior.WANDER
+INIT_VEL = (50,0)
+BEHAVIOR = Behavior.NONE
         
 
 world = GameWorld(WIDTH,HEIGHT)
@@ -248,7 +261,11 @@ vehicle.toggle_behavior(BEHAVIOR)
 
 def start():
     create_agents()
-    world.create_obstacles()
+    if world.show_obstacles:
+        world.create_obstacles()
+        for a in world.agents:
+            a.obstacle_avoidance_on()
+##    world.create_obstacles()
 
 
 def update(dt):
@@ -260,18 +277,31 @@ def update(dt):
 
 def draw():
     screen.clear()
-    world.draw()
+    world.draw(screen.surface)
 
 def on_key_down(key):
     pass
 
 def on_key_up(key):
 
-    if key == keys.B:
-        world.toggle_behavior()
-        
-    elif key == keys.C:
+##    if key == keys.B:
+##        world.toggle_behavior()
+
+    #show Crosshair shortcut 'C'        
+    if key == keys.C:
         world.show_crosshair = not world.show_crosshair
+
+    #obstacle avoidance shortcut 'O'
+    elif key == keys.O:
+        world.show_obstacles = not world.show_obstacles
+        if world.show_obstacles:
+            world.create_obstacles()
+            for a in world.agents:
+                a.obstacle_avoidance_on()
+        else:
+            del world.obstacles[:]
+            for a in world.agents:
+                a.obstacle_avoidance_off()
 
 def on_mouse_down(pos):
     # move the target

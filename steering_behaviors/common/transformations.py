@@ -134,27 +134,12 @@ def point_to_world_space(point,position,fwd,side,scale=Vector2(1.0,1.0)):
 
 
 def vector_to_world_space(vector, fwd, side):
-    print('are we even getting here')
     mat = C2DMatrix()
     mat.rotate(fwd, side)
-    print(mat)
     
     return mat.transform(vector)
         
 
-
-##def world_transform(points, pos, forward, side):
-##    """given points, position and orientation transform the points
-##into the objects world space"""
-##    pass
-
-##def point_to_world_space(point, agent_heading, agent_side, agent_pos):
-##    """transform a point from the agent's local space into world space"""
-##    pass
-
-##def vector_to_world_space(vec, agent_heading, agent_side):
-##    """tranforms a vector from the agent's local space into world space"""
-##    pass
 
 def point_to_local_space(point, agent_heading, agent_side, agent_position):
     """transforms a point into the agent's local space"""
@@ -163,14 +148,25 @@ def point_to_local_space(point, agent_heading, agent_side, agent_position):
     ty = -agent_position.dot( agent_side )
     
     mat = C2DMatrix()
-    mat.translate(tx,ty)
-    mat.rotate(agent_heading, agent_side)
+    mat.mat[0,0] = agent_heading.x
+    mat.mat[1,0] = agent_heading.y
+    mat.mat[2,0] = tx 
+
+    mat.mat[0,1] = agent_side.x
+    mat.mat[1,1] = agent_side.y
+    mat.mat[2,1] = ty 
 
     return mat.transform(Vector2(point))
 
 def vector_to_local_space(vec, agent_heading, agent_side):
     mat = C2DMatrix()
-    mat.rotate(agent_heading, agent_side)
+
+    mat.mat[0,0] = agent_heading.x
+    mat.mat[1,0] = agent_heading.y
+
+
+    mat.mat[0,1] = agent_side.x
+    mat.mat[1,1] = agent_side.y
 
     return mat.transform(Vector2(vec))    
 
