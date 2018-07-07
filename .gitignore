@@ -1,3 +1,9 @@
 .DS_Store
 *pycache*
 design
+__*
+*foo*
+*bar*
+*biz*
+*baz*
+*sandbox*
