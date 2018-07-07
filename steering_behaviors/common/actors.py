@@ -127,6 +127,19 @@ class Vehicle(Actor2):
 ##        print("      VElocity AFTER truncate = ", self.velocity)                
         self.exact_pos += self.velocity * dt
 
+        # handle off screen position by wrapping
+        if self.exact_pos.x > self._world.width:
+            self.exact_pos.x = 0 #self.bounding_radius
+            
+        if self.exact_pos.x < 0:
+            self.exact_pos.x = self._world.width - self.bounding_radius
+
+        if self.exact_pos.y < 0:
+            self.exact_pos.y = self._world.height - self.bounding_radius
+
+        if self.exact_pos.y > self._world.height:
+            self.exact_pos.y = 0 # self.bounding_radius
+
         if self.speed > 0.0001:
             self.heading = self._velocity.normalize()
             self.side = self.heading.rotate(90)
@@ -256,7 +269,6 @@ class Obstacle(Actor2):
 
     def __init__(self,*args,**kwargs):
         file = Obstacle.img_file()
-        print('creating obstacle from file: ',file)
         super().__init__( Obstacle.img_file() ,*args, **kwargs)
 
     @classmethod
