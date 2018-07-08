@@ -341,7 +341,7 @@ class SteeringBehaviors:
             # the feeler cut into the wall
             if closest_wall != None:
                 over_shoot = feeler - closest_point
-                steering_force = wall.normal * over_shoot.length() *10
+                steering_force = wall.normal * over_shoot.length() * self.wall_params.repel_multiplier
         
         return steering_force
     

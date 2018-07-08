@@ -15,6 +15,7 @@ class ObstacleParams:
 
 class WallAvoidanceParams:
     detection_feeler_length = 50
+    repel_multiplier = 10.0
 
 class VehicleParams:
     mass = 1.0
