@@ -13,6 +13,9 @@ class ObstacleAvoidanceParams:
 class ObstacleParams:
     number = 10
 
+class WallAvoidanceParams:
+    detection_feeler_length = 50
+
 class VehicleParams:
     mass = 1.0
     max_speed = 10

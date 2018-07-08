@@ -1,11 +1,15 @@
 from pygame.math import Vector2
 from enum import IntEnum
 from random import random
-from math import sqrt
-from common.params import WanderParams
-from common.params import ObstacleAvoidanceParams
+from math import sqrt, pi
+
+from common.params import ObstacleAvoidanceParams, WallAvoidanceParams, WanderParams
 from common.behavior import Behavior
+from common.geometry import line_intersection_get_distance_point
+
 import common.transformations as Tx
+import pygame as pg
+
 import pygame.gfxdraw
 import pgzrun
 
@@ -51,7 +55,10 @@ class SteeringBehaviors:
         self._flags = Behavior.NONE
 
         self.wander_params = WanderParams()
-        self.obstacle_params = ObstacleAvoidanceParams() 
+        self.obstacle_params = ObstacleAvoidanceParams()
+        self.wall_params = WallAvoidanceParams()
+
+        self.feelers = [0,0,0]
         
 
     def calculate(self):
@@ -77,6 +84,9 @@ class SteeringBehaviors:
 
         if self.is_on(Behavior.OBSTACLE_AVOIDANCE):
             self._steering_force += self.obstacle_avoidance( self._entity.world.obstacles )
+            
+        if self.is_on(Behavior.WALL_AVOIDANCE):
+            self._steering_force += self.wall_avoidance( self._entity.world.walls )
             
         return self._steering_force
 
@@ -291,18 +301,70 @@ class SteeringBehaviors:
         #convert the steering force from local to world space
         return Tx.vector_to_world_space(steering_force, entity.heading, entity.side)
 
+    ## ---------------------------------------------------
+    ## Wall Avoidance
+    ## 
+    ##   
+    def wall_avoidance(self, walls):
+        self.create_feelers()
+        entity = self._entity
+        ## variables for keeping track of the information as we
+        ## iterate through the list of walls
+        # dist to intersection point
+        dist_ip = 0
+        dist_to_closest_ip = 1000000
 
-##
-##        self.show_walls = False
-##        self.show_obstacles = False
-##        self.show_path = False
-##        self.show_wander_circle = False
-##        self.show_steering_force = False
-##        self.show_feelers = False
-##        self.show_detection_box = False
-##        self.render_neighbors = False
-##        self.view_keys = False
-##        self.show_cell_space_info = False        
+        closest_wall = None
+
+        steering_force = Vector2()
+        point = Vector2()
+        closest_point = Vector2()
+
+
+        # for each feeler
+        # find the closest wall
+##        intersecting_walls = [ wall for feeler, wall in feelers,walls if line_intersection()]
+
+        for feeler in self.feelers:
+            for wall in walls:
+                intersecting,_dt,_pt = line_intersection_get_distance_point(entity.exact_pos,
+                                                                            feeler,
+                                                                            wall.phrom,
+                                                                            wall.to)
+
+                if intersecting:
+                    if _dt < dist_to_closest_ip:
+                        dist_to_closest_ip = _dt
+                        closest_wall = wall
+                        closest_point = _pt
+            # if we found a wall then calculate a steering force based on how far
+            # the feeler cut into the wall
+            if closest_wall != None:
+                over_shoot = feeler - closest_point
+                steering_force = wall.normal * over_shoot.length() *10
+        
+        return steering_force
+    
+    
+    ## ---------------------------------------------------
+    ## Create Feelers
+    ## 
+    ##       
+    def create_feelers(self):
+        entity = self._entity
+        fl = self.wall_params.detection_feeler_length
+        
+        self.feelers[0] = entity.exact_pos + fl * entity.heading
+        
+        temp = entity.heading.rotate( -50) #3.5 * 0.5 * pi)
+        self.feelers[1] = entity.exact_pos + fl * 0.95 * temp
+        
+        temp = entity.heading.rotate( 50 ) #0.5 * pi)
+        self.feelers[2] = entity.exact_pos + fl * 0.95 * temp
+        
+        
+
+    
 
     def render_aids(self,surface):
         entity = self._entity
@@ -373,3 +435,26 @@ class SteeringBehaviors:
                 
             pygame.gfxdraw.aapolygon( surface, rect_verts_world_space, (0,200,0))
 
+
+        # wall_avoidance aids
+        if entity.is_behavior_on(Behavior.WALL_AVOIDANCE):
+            if world.show_feelers:
+                for feeler in self.feelers:
+                    pygame.gfxdraw.line( surface,
+                                           int(entity.exact_pos.x),
+                                           int(entity.exact_pos.y),
+                                           int(feeler.x),
+                                           int(feeler.y),
+                                           pg.Color("orange"))
+        
+            if world.show_walls:
+                for wall in world.walls:
+                    if world.show_wall_normals:
+                        wall.draw_with_normals(surface)
+                    else:
+                        wall.draw(surface)
+
+
+
+
+                    

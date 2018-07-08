@@ -31,7 +31,10 @@ def tag_neighbors(actor, objs, dist):
         if to.length_squared() < ( rng * rng ):
             o.tag()
 
-
+## ---------------------------------------------------
+## Actor2
+## 
+##   
 class Actor2(Actor):
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
@@ -70,9 +73,11 @@ class Actor2(Actor):
         self._calc_anchor()
         self.pos = pos
         
-##        self.heading = Vector2(cos(radians(angle)), sin(radians(angle)))
 
-    
+## ---------------------------------------------------
+## Vehicle
+## 
+##       
 class Vehicle(Actor2):
     IMG_FILE = 'player'
 
@@ -89,7 +94,7 @@ class Vehicle(Actor2):
         self.velocity = Vector2(vel)
         self.max_speed = max_speed
         self._max_turn_rate = max_turn_rate
-        self._max_force = max_force
+        self.max_force = max_force
         self.mass = mass
         self._target_actor = None
         self.steering_force = Vector2()
@@ -117,6 +122,8 @@ class Vehicle(Actor2):
         
         self.steering_force = self._steering.calculate()
 
+        truncate_ip(self.steering_force, self.max_force)
+        
 ##        print('***** STEERING FORCE = ', steering_force)
 
         accel = self.steering_force / self.mass
@@ -150,11 +157,54 @@ class Vehicle(Actor2):
         self.angle = -self.heading.as_polar()[1]
 
 
+
+    def seek_on(self):
+        self.behavior_on(Behavior.SEEK_AVOIDANCE)
+
+    def seek_off(self):
+        self.behavior_off(Behavior.SEEK_AVOIDANCE)
+        
+    def arrive_on(self):
+        self.behavior_on(Behavior.ARRIVE_AVOIDANCE)
+
+    def arrive_off(self):
+        self.behavior_off(Behavior.ARRIVE_AVOIDANCE)
+        
+    def flee_on(self):
+        self.behavior_on(Behavior.FLEE_AVOIDANCE)
+
+    def flee_off(self):
+        self.behavior_off(Behavior.FLEE_AVOIDANCE)
+              
+    def pursuit_on(self):
+        self.behavior_on(Behavior.PURSUIT_AVOIDANCE)
+
+    def pursuit_off(self):
+        self.behavior_off(Behavior.PURSUIT_AVOIDANCE)
+              
+    def evade_on(self):
+        self.behavior_on(Behavior.EVADE_AVOIDANCE)
+
+    def evade_off(self):
+        self.behavior_off(Behavior.EVADE_AVOIDANCE)        
+              
+    def wander_on(self):
+        self.behavior_on(Behavior.WANDER_AVOIDANCE)
+
+    def wander_off(self):
+        self.behavior_off(Behavior.WANDER_AVOIDANCE)
+
     def obstacle_avoidance_on(self):
         self.behavior_on(Behavior.OBSTACLE_AVOIDANCE)
 
     def obstacle_avoidance_off(self):
         self.behavior_off(Behavior.OBSTACLE_AVOIDANCE)
+
+    def wall_avoidance_on(self):
+        self.behavior_on(Behavior.WALL_AVOIDANCE)
+
+    def wall_avoidance_off(self):
+        self.behavior_off(Behavior.WALL_AVOIDANCE)
 
     def behavior_on(self, behavior):
         print('turning on behavior: ', Behavior.str(behavior))
@@ -199,7 +249,7 @@ class Vehicle(Actor2):
                              pg.Color(200,200,200))
 
             if self._world.show_steering_force:
-                f = self.steering_force / self._max_force
+                f = self.steering_force / self.max_force
                 f *= 100
                 gfxdraw.line(surface,
                              int(self.exact_pos.x),
@@ -256,7 +306,10 @@ class Vehicle(Actor2):
     def target_actor(self, actor):
         self._target_actor = actor
         
-
+## ---------------------------------------------------
+## Crosshair
+## 
+##   
 class Crosshair(Actor2):
     IMG_FILE = 'target'
     
@@ -264,6 +317,10 @@ class Crosshair(Actor2):
         super().__init__(Crosshair.IMG_FILE,*args,**kwargs)
 
 
+## ---------------------------------------------------
+## Obstacle
+## 
+##   
 class Obstacle(Actor2):
     IMG_FILE = 'obstacle'
 
@@ -274,6 +331,9 @@ class Obstacle(Actor2):
     @classmethod
     def img_file(cls):
         return Obstacle.IMG_FILE + str(choice(range(9)))
+
+
+
 
 
 def truncate_ip(vec,limit):

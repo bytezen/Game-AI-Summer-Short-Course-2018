@@ -2,6 +2,7 @@ import common.actors as Actors
 from common.actors import Vehicle, Crosshair, Obstacle
 from common.behavior import Behavior
 import common.params as Params
+from common.wall import Wall
 
 import pygame as pg
 import pygame.gfxdraw
@@ -25,18 +26,20 @@ class GameWorld:
         self.obstacle_params = Params.ObstacleParams()
         self.obstacles = []
         self.agents = []
+        self.walls = []
 
         #display flags
         self.view_keys = True
         
-        self.show_walls = False
+        self.show_walls = True
+        self.show_wall_normals = True
         self.show_obstacles = True
         self.show_path = False
         self.show_wander_circle = False
         self.show_steering_force = True
         self.show_heading = False
         self.show_feelers = False
-        self.show_detection_box = True
+        self.show_detection_box = False
         self.render_neighbors = False
         self.show_tagged = True
 
@@ -89,11 +92,25 @@ class GameWorld:
                     self.obstacles.append(tryme)
                     add_obstacle(tryme)
                     break
-                
+
+    def create_walls(self):
+        if len(self.walls) > 0:
+            return
+
+        self.walls.append(Wall((50,50),(300,450)))
+
+    def behavior_on(self, behavior):
+        for a in self.agents:
+            a.behavior_on(behavior)
+
+    def behavior_off(self, behavior):
+        for a in self.agents:
+            a.behavior_off(behavior)
+
+                          
     def tag_obstacles_in_view_range(self, actor, objs, search_range):
         #TODO: use cell space partitioning for this
         Actors.tag_neighbors(actor, objs , search_range)
-
 
 
     def update(self, time_elapsed):
@@ -185,7 +202,5 @@ class GameWorld:
     def show_crosshair(self, val):
         self._show_crosshair = val
 
-    def toggle_behavior(self):
-        for a in self.agents:
-            a.toggle_behavior(BEHAVIOR)
+
 
