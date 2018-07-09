@@ -69,9 +69,10 @@ class GameWorld:
     def add_agent(self, agent):
         self.agents.append(agent)
         
-    def create_obstacles(self):
+    def create_obstacles(self, count = None):
         max_trys = 2000
 
+        count = count or self.obstacle_params.number
         #create a dictionary to store obstacles
         #we will add obstacles to this dictionary if they do not collide with
         #anything in the dictionary
@@ -88,7 +89,7 @@ class GameWorld:
         for o in self.obstacles:
             add_obstacles(o)
         
-        for i in range(self.obstacle_params.number):
+        for i in range( count ):
             num_trys = 0
             overlapped = True
 

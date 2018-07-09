@@ -1,6 +1,9 @@
 from pygame.math import Vector2
 from common.behavior import Behavior
 
+class BehaviorParams:
+    threat_scan_distance = 100
+    
 class WanderParams:
     jitter = 5.0
     radius = 50.0

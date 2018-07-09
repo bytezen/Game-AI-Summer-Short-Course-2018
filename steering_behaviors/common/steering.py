@@ -2,8 +2,9 @@ from pygame.math import Vector2
 from enum import IntEnum
 from random import random
 from math import sqrt, pi
+import sys
 
-from common.params import ObstacleAvoidanceParams, WallAvoidanceParams, WanderParams
+from common.params import ObstacleAvoidanceParams, WallAvoidanceParams, WanderParams, BehaviorParams
 from common.behavior import Behavior
 from common.geometry import line_intersection_get_distance_point
 
@@ -57,6 +58,7 @@ class SteeringBehaviors:
         self.wander_params = WanderParams()
         self.obstacle_params = ObstacleAvoidanceParams()
         self.wall_params = WallAvoidanceParams()
+        self.behavior_params = BehaviorParams()
 
         self.feelers = [0,0,0]
         
@@ -90,6 +92,9 @@ class SteeringBehaviors:
 
         if self.is_on(Behavior.INTERPOSE):
             self._steering_force += self.interpose( *self._entity.targets )
+
+        if self.is_on(Behavior.HIDE):
+            self._steering_force += self.hide( self._entity.hunter, self._entity.world.obstacles )
             
         return self._steering_force
 
@@ -109,9 +114,19 @@ class SteeringBehaviors:
     def toggle_behavior(self, behavior):
         self._flags ^= behavior
 
-    #
-    # Behavior methods
-    #
+
+    ##                                      ##
+    ##                                      ##
+    #             Behavior methods           #
+    ##                                      ##
+    ##                                      ##
+    
+
+    ## ---------------------------------------------------
+    ## Seek
+    ## 
+    ##
+    ##      
     def seek(self,target):
         desiredVelocity = target - self._entity.exact_pos
         
@@ -122,6 +137,11 @@ class SteeringBehaviors:
         return desiredVelocity - self._entity.velocity
 
 
+    ## ---------------------------------------------------
+    ## Arrive
+    ## 
+    ##
+    ##  
     def arrive(self,target, decelaration=Decelaration.NORMAL):
         toTarget = target - self._entity.exact_pos
         dist = toTarget.length()
@@ -138,6 +158,12 @@ class SteeringBehaviors:
             return Vector2()
 
 
+
+    ## ---------------------------------------------------
+    ## Flee
+    ## 
+    ##
+    ##  
     def flee(self,target):
         desiredVelocity = self._entity.exact_pos - target
         
@@ -148,6 +174,11 @@ class SteeringBehaviors:
         return desiredVelocity - self._entity.velocity
         
 
+    ## ---------------------------------------------------
+    ## Pursuit
+    ## 
+    ##
+    ##  
     def pursuit(self, evader):
         # vector from us to the evader
         to_evader = evader.exact_pos - self._entity.exact_pos
@@ -176,21 +207,31 @@ class SteeringBehaviors:
         look_ahead_time = to_evader.length() / ( self._entity.max_speed + evader.speed )
         return self.seek(evader.exact_pos + evader.velocity * look_ahead_time)
 
-
+    ## ---------------------------------------------------
+    ## Evade
+    ## 
+    ##
+    ##  
     def evade(self, pursuer):
         entity = self._entity
         to_pursuer = pursuer.exact_pos - entity.exact_pos
 
         #Threat Range; uncomment to have agent only pursue entities within range
-        threat_range = 100.0
+        threat_range = BehaviorParams.threat_scan_distance or 10000
+        
         if to_pursuer.length_squared() > (threat_range * threat_range):
             return Vector2()
 
         look_ahead_time = to_pursuer.length() / ( entity.max_speed + pursuer.speed )
         return self.flee( pursuer.pos + ( pursuer.velocity * look_ahead_time ) )
-        pass
 
 
+
+    ## ---------------------------------------------------
+    ## Wander
+    ## 
+    ##
+    ##   
     def wander(self):
         entity = self._entity
 
@@ -225,6 +266,12 @@ class SteeringBehaviors:
 
         return target
 
+
+    ## ---------------------------------------------------
+    ## Obstacle Avoidance
+    ## 
+    ##
+    ##       
     def obstacle_avoidance(self, obstacles):
         params = self.obstacle_params
         entity = self._entity
@@ -307,7 +354,8 @@ class SteeringBehaviors:
     ## ---------------------------------------------------
     ## Wall Avoidance
     ## 
-    ##   
+    ##
+    ##       
     def wall_avoidance(self, walls):
         self.create_feelers()
         entity = self._entity
@@ -351,7 +399,8 @@ class SteeringBehaviors:
     ## ---------------------------------------------------
     ## Interpose
     ## 
-    ##   
+    ##
+    ##       
     def interpose(self, *agents):
         assert len(agents) >= 2, 'need to pass in at least 2 agents, suckah' + str(len(agents))
         target1,target2 = agents[:2]
@@ -372,7 +421,48 @@ class SteeringBehaviors:
         return self.arrive(mid_point,Decelaration.FAST)
 
 
-    
+    ## ---------------------------------------------------
+    ## Hide
+    ## 
+    ##
+    ##       
+    def hide(self, hunter, obstacles):
+        entity = self._entity
+        world = self._entity.world
+
+        # record keeping variables
+        dist_to_closest = sys.float_info.max
+        best_hiding_spot = None
+        closest_obstacle = None
+
+        for o in world.obstacles:
+            hiding_spot = self.get_hiding_position( o.exact_pos, o.bounding_radius, hunter.exact_pos )
+            dist = entity.exact_pos.distance_to( hiding_spot )
+            if dist < dist_to_closest:
+                best_hiding_spot = hiding_spot
+                closest_obstacle = o
+                dist_to_closest = dist
+
+        if dist_to_closest == sys.float_info.max:
+            return self.evade(hunter)
+
+        return self.arrive(best_hiding_spot,Decelaration.FAST)
+
+
+    def get_hiding_position(self, blocking_obj_pos, blocking_obj_bounding_radius, baddie_pos, spacing_from_obj = 30): 
+        """
+        Given the position of a hunter, and position and bounding radius of an obstacle, this method
+        finds the position that puts the boundary between its location and the hunter
+        """
+        # calculate the spacing 
+        dist_away = blocking_obj_bounding_radius + spacing_from_obj
+
+        # calculate the heading from the object to the hunter
+        to = (blocking_obj_pos - baddie_pos).normalize()
+        
+        # scale the distance
+        return (blocking_obj_pos) + to * dist_away
+                
     
     ## ---------------------------------------------------
     ## Create Feelers
