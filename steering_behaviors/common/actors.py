@@ -81,6 +81,11 @@ class Actor2(Actor):
 class Vehicle(Actor2):
     IMG_FILE = 'player'
 
+    BOID_IMG = { 'red':'boid1', 'blue':'boid2', 'green':'boid3', 'purple': 'boid4'}
+
+    #Target indices for different behaviors that require additional actors
+    HUNTER_INDEX = 4
+
     # Document the constructor. Essentially what we are doing here
     # is handling all of the vehicle specific args as positional parameters
     # everything passed in is wrapped up as kwargs and passed into the pgzero
@@ -88,7 +93,7 @@ class Vehicle(Actor2):
     # args are for this.
     #
     # This class will also handle the image for the Vehicle internally.
-    def __init__(self,world,vel,mass,max_speed,max_turn_rate,max_force,**kwargs):
+    def __init__(self,world,vel,mass,max_speed,max_turn_rate,max_force,boid="red",**kwargs):
 
         # this will also initialize our heading and our side vector
         self.velocity = Vector2(vel)
@@ -98,7 +103,7 @@ class Vehicle(Actor2):
         self.mass = mass
         self._target_actor = None
         self.steering_force = Vector2()
-        self.targets = []
+        self.targets = [None,None,None,None,None]
 
         # create a reference to steering behavior and
         # pass a reference of ourselves to it
@@ -106,7 +111,8 @@ class Vehicle(Actor2):
 
         self._world = world
 
-        super().__init__(Vehicle.IMG_FILE, **kwargs)
+        boid = boid if boid in Vehicle.BOID_IMG.keys() else 'red'
+        super().__init__(Vehicle.BOID_IMG[boid], **kwargs)
 
         #TODO: Check that we have a position in kwargs
         #if  not ('pos' in kwargs):
@@ -212,6 +218,12 @@ class Vehicle(Actor2):
 
     def interpose_off(self):
         self.behavior_off(Behavior.INTERPOSE)
+        
+    def hide_on(self):
+        self.behavior_on(Behavior.HIDE)
+
+    def hide_off(self):
+        self.behavior_off(Behavior.HIDE)
         
     def behavior_on(self, behavior):
         print('turning on behavior: ', Behavior.str(behavior))
@@ -319,7 +331,16 @@ class Vehicle(Actor2):
     def evade_target(self, actor):
         self._target_actor = actor
 ##        self.targets[1] = actor
-        
+
+    @property
+    def hunter(self):
+        return self.targets[self.HUNTER_INDEX]
+
+    @hunter.setter
+    def hunter(self,actor):
+        self.targets[self.HUNTER_INDEX] = actor
+
+    
 ## ---------------------------------------------------
 ## Crosshair
 ## 
