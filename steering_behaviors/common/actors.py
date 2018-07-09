@@ -98,6 +98,7 @@ class Vehicle(Actor2):
         self.mass = mass
         self._target_actor = None
         self.steering_force = Vector2()
+        self.targets = []
 
         # create a reference to steering behavior and
         # pass a reference of ourselves to it
@@ -159,40 +160,40 @@ class Vehicle(Actor2):
 
 
     def seek_on(self):
-        self.behavior_on(Behavior.SEEK_AVOIDANCE)
+        self.behavior_on(Behavior.SEEK)
 
     def seek_off(self):
-        self.behavior_off(Behavior.SEEK_AVOIDANCE)
+        self.behavior_off(Behavior.SEEK)
         
     def arrive_on(self):
-        self.behavior_on(Behavior.ARRIVE_AVOIDANCE)
+        self.behavior_on(Behavior.ARRIVE)
 
     def arrive_off(self):
-        self.behavior_off(Behavior.ARRIVE_AVOIDANCE)
+        self.behavior_off(Behavior.ARRIVE)
         
     def flee_on(self):
-        self.behavior_on(Behavior.FLEE_AVOIDANCE)
+        self.behavior_on(Behavior.FLEE)
 
     def flee_off(self):
-        self.behavior_off(Behavior.FLEE_AVOIDANCE)
+        self.behavior_off(Behavior.FLEE)
               
     def pursuit_on(self):
-        self.behavior_on(Behavior.PURSUIT_AVOIDANCE)
+        self.behavior_on(Behavior.PURSUIT)
 
     def pursuit_off(self):
-        self.behavior_off(Behavior.PURSUIT_AVOIDANCE)
+        self.behavior_off(Behavior.PURSUIT)
               
     def evade_on(self):
-        self.behavior_on(Behavior.EVADE_AVOIDANCE)
+        self.behavior_on(Behavior.EVADE)
 
     def evade_off(self):
-        self.behavior_off(Behavior.EVADE_AVOIDANCE)        
+        self.behavior_off(Behavior.EVADE)        
               
     def wander_on(self):
-        self.behavior_on(Behavior.WANDER_AVOIDANCE)
+        self.behavior_on(Behavior.WANDER)
 
     def wander_off(self):
-        self.behavior_off(Behavior.WANDER_AVOIDANCE)
+        self.behavior_off(Behavior.WANDER)
 
     def obstacle_avoidance_on(self):
         self.behavior_on(Behavior.OBSTACLE_AVOIDANCE)
@@ -206,6 +207,12 @@ class Vehicle(Actor2):
     def wall_avoidance_off(self):
         self.behavior_off(Behavior.WALL_AVOIDANCE)
 
+    def interpose_on(self):
+        self.behavior_on(Behavior.INTERPOSE)
+
+    def interpose_off(self):
+        self.behavior_off(Behavior.INTERPOSE)
+        
     def behavior_on(self, behavior):
         print('turning on behavior: ', Behavior.str(behavior))
         self._steering.on(behavior)
@@ -228,6 +235,9 @@ class Vehicle(Actor2):
     def toggle_behavior(self, behavior):
         self._steering.toggle_behavior(behavior)
 
+
+    def add_target(self, actor):
+        self.targets.append(actor)
 ##    def toggle_behavior(self,behavior):
 ##        self._steering.toggle_behavior(behavior)
 
@@ -292,19 +302,23 @@ class Vehicle(Actor2):
 
     @property
     def pursuit_target(self):
-        return self.target_actor
+        return self._target_actor
+##        return self.targets[0]
     
     @pursuit_target.setter
     def pursuit_target(self, actor):
-        self.target_actor = actor
+        self._target_actor = actor
+##        self.targets[0] = actor
 
     @property
-    def target_actor(self):
+    def evade_target(self):
         return self._target_actor
+##        return self.targets[1]
 
-    @target_actor.setter
-    def target_actor(self, actor):
+    @evade_target.setter
+    def evade_target(self, actor):
         self._target_actor = actor
+##        self.targets[1] = actor
         
 ## ---------------------------------------------------
 ## Crosshair

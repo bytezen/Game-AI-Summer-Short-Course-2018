@@ -77,7 +77,7 @@ class SteeringBehaviors:
             self._steering_force += self.pursuit( self._entity.pursuit_target )
             
         if self.is_on(Behavior.EVADE):             
-            self._steering_force += self.evade( self._entity.target_actor )
+            self._steering_force += self.evade( self._entity.evade_target )
 
         if self.is_on(Behavior.WANDER):                  
             self._steering_force += self.wander()
@@ -87,6 +87,9 @@ class SteeringBehaviors:
             
         if self.is_on(Behavior.WALL_AVOIDANCE):
             self._steering_force += self.wall_avoidance( self._entity.world.walls )
+
+        if self.is_on(Behavior.INTERPOSE):
+            self._steering_force += self.interpose( *self._entity.targets )
             
         return self._steering_force
 
@@ -344,6 +347,31 @@ class SteeringBehaviors:
                 steering_force = wall.normal * over_shoot.length() * self.wall_params.repel_multiplier
         
         return steering_force
+
+    ## ---------------------------------------------------
+    ## Interpose
+    ## 
+    ##   
+    def interpose(self, *agents):
+        assert len(agents) >= 2, 'need to pass in at least 2 agents, suckah' + str(len(agents))
+        target1,target2 = agents[:2]
+        entity = self._entity
+        
+        # first we need to figure out where the two agents are going to be at time T in the future.
+        # This is approximated by determining the time taken to reach the mid way point at the
+        # current time at max speed
+
+        mid_point = (target1.exact_pos + target2.exact_pos ) * 0.5
+        time_to_reach_mid_point =   (entity.exact_pos.distance_to( mid_point) ) / entity.max_speed
+
+        future1 = target1.exact_pos + target1.velocity * time_to_reach_mid_point
+        future2 = target2.exact_pos + target2.velocity * time_to_reach_mid_point
+
+        mid_point = (future1 + future2) * 0.5
+
+        return self.arrive(mid_point,Decelaration.FAST)
+
+
     
     
     ## ---------------------------------------------------

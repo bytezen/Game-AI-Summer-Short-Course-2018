@@ -47,6 +47,25 @@ class GameWorld:
         self.show_cell_space_info = False
         self.show_crosshair = False
 
+
+    def display_flags_off(self):
+        self.view_keys = False
+        
+        self.show_walls = False
+        self.show_wall_normals = False
+        self.show_obstacles = False
+        self.show_path = False
+        self.show_wander_circle = False
+        self.show_steering_force = False
+        self.show_heading = False
+        self.show_feelers = False
+        self.show_detection_box = False
+        self.render_neighbors = False
+        self.show_tagged = False
+
+
+        self.show_cell_space_info = False
+        self.show_crosshair = False        
     def add_agent(self, agent):
         self.agents.append(agent)
         
