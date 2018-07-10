@@ -276,7 +276,8 @@ class Vehicle(Actor2):
 
 ##    def obstacle_avoidance_on(self): self._steering.
 
-    def draw(self,surface):
+    def draw(self,screen):
+        surface = screen.surface
         super().draw()
 
         if self._world.view_keys:
@@ -301,7 +302,7 @@ class Vehicle(Actor2):
                              int(self.exact_pos.y + f.y),
                              pg.Color(200,0,0))
             #hud
-            self.hud.draw(surface)
+            self.hud.draw(screen)
                              
                              
 

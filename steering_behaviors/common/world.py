@@ -146,7 +146,8 @@ class GameWorld:
             a.update(time_elapsed)
 
 
-    def draw(self,surface):
+    def draw(self,screen):
+        surface = screen.surface
 ##        display = self.display_params
 
         if self.show_walls:
@@ -167,7 +168,7 @@ class GameWorld:
 
         # render the agents
         for a in self.agents:
-            a.draw(surface)
+            a.draw(screen)
 ##            if a.on(Behavior.WANDER) and display.show_wander_config:
 ##                grab wander params from steering and params file
 ##                use pygame.gfx to draw to screen
