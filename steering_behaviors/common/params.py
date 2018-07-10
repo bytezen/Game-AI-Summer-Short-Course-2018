@@ -3,6 +3,7 @@ from common.behavior import Behavior
 
 class BehaviorParams:
     threat_scan_distance = 100
+    path_follow_scan_distance = 40
     
 class WanderParams:
     jitter = 5.0

@@ -7,6 +7,7 @@ import pygame as pg
 
 from common.steering import SteeringBehaviors
 from common.behavior import Behavior
+from common.path import Path
 from math import cos,sin,degrees,radians
 from random import choice
 
@@ -224,6 +225,12 @@ class Vehicle(Actor2):
 
     def hide_off(self):
         self.behavior_off(Behavior.HIDE)
+
+    def path_follow_on(self):
+        self.behavior_on(Behavior.FOLLOW_PATH)
+
+    def path_follow_off(self):
+        self.behavior_off(Behavior.FOLLOW_PATH)        
         
     def behavior_on(self, behavior):
         print('turning on behavior: ', Behavior.str(behavior))
@@ -339,6 +346,14 @@ class Vehicle(Actor2):
     @hunter.setter
     def hunter(self,actor):
         self.targets[self.HUNTER_INDEX] = actor
+
+    @property
+    def path(self):
+        return self._steering.path
+
+    @path.setter
+    def path(self, path):
+        self._steering.path = path
 
     
 ## ---------------------------------------------------

@@ -61,6 +61,7 @@ class SteeringBehaviors:
         self.behavior_params = BehaviorParams()
 
         self.feelers = [0,0,0]
+        self.path = None
         
 
     def calculate(self):
@@ -95,6 +96,9 @@ class SteeringBehaviors:
 
         if self.is_on(Behavior.HIDE):
             self._steering_force += self.hide( self._entity.hunter, self._entity.world.obstacles )
+
+        if self.is_on(Behavior.FOLLOW_PATH):
+            self._steering_force += self.follow_path( self.path )
             
         return self._steering_force
 
@@ -462,7 +466,26 @@ class SteeringBehaviors:
         
         # scale the distance
         return (blocking_obj_pos) + to * dist_away
-                
+
+
+
+    ## ---------------------------------------------------
+    ## Follow Path
+    ## 
+    ##
+    ##       
+    def follow_path(self, path):
+        entity = self._entity
+        if entity.exact_pos.distance_to( self.path.current_way_point ) < \
+            BehaviorParams.path_follow_scan_distance:
+
+                self.path.next()
+
+        if self.path.at_end():
+            return self.seek(self.path.current_way_point)
+        else:
+            return self.arrive(self.path.current_way_point, Decelaration.NORMAL)
+        
     
     ## ---------------------------------------------------
     ## Create Feelers
@@ -572,6 +595,9 @@ class SteeringBehaviors:
                     else:
                         wall.draw(surface)
 
+        if entity.is_behavior_on(Behavior.FOLLOW_PATH):
+            if world.show_path:
+                self.path.draw(surface)
 
 
 
