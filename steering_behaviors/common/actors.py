@@ -8,6 +8,7 @@ import pygame as pg
 from common.steering import SteeringBehaviors
 from common.behavior import Behavior
 from common.path import Path
+from common.hud import Hud
 from math import cos,sin,degrees,radians
 import random
 
@@ -95,7 +96,7 @@ class Vehicle(Actor2):
     # args are for this.
     #
     # This class will also handle the image for the Vehicle internally.
-    def __init__(self,world,vel,mass,max_speed,max_turn_rate,max_force,boid="red",**kwargs):
+    def __init__(self,world,vel,mass,max_speed,max_turn_rate,max_force,boid=None,**kwargs):
 
         # this will also initialize our heading and our side vector
         self.velocity = Vector2(vel)
@@ -114,9 +115,11 @@ class Vehicle(Actor2):
         self._world = world
 
         if not(boid in Vehicle.BOID_IMG.keys()):
-            boid = random.choice(BOID_IMG.values())
+            boid = random.choice(list(Vehicle.BOID_IMG.values()))
+        else:
+            boid = Vehicle.BOID_IMG[boid]                
             
-        super().__init__(Vehicle.BOID_IMG[boid], **kwargs)
+        super().__init__(boid, **kwargs)
 
         #TODO: Check that we have a position in kwargs
         #if  not ('pos' in kwargs):
@@ -126,6 +129,8 @@ class Vehicle(Actor2):
         self.angle = -self.heading.as_polar()[1]
 
         self.time_elapsed = 0.0
+
+        self.hud = Hud(self)
 
     def update(self,dt):
         #some behaviors need to know the time since the last update
@@ -285,7 +290,7 @@ class Vehicle(Actor2):
                              int(self.exact_pos.x + 20 * self.heading.x),
                              int(self.exact_pos.y + 20 * self.heading.y),
                              pg.Color(200,200,200))
-
+            #steering_force
             if self._world.show_steering_force:
                 f = self.steering_force / self.max_force
                 f *= 100
@@ -295,10 +300,10 @@ class Vehicle(Actor2):
                              int(self.exact_pos.x + f.x),
                              int(self.exact_pos.y + f.y),
                              pg.Color(200,0,0))
+            #hud
+            self.hud.draw(surface)
                              
                              
-                             
-                pass
 
     @property
     def behavior(self):
