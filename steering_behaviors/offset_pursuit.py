@@ -62,7 +62,7 @@ def update(dt):
 
 def draw():
     screen.clear()
-    world.draw(screen.surface)
+    world.draw(screen)
 
 def on_key_down(key):
     pass
