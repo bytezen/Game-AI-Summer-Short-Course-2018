@@ -65,9 +65,14 @@ class GameWorld:
 
 
         self.show_cell_space_info = False
-        self.show_crosshair = False        
-    def add_agent(self, agent):
-        self.agents.append(agent)
+        self.show_crosshair = False
+
+    def add_agent(self, *agents):
+        if len(agents) > 1:
+            for agent in agents:
+                self.agents.append(agent)
+        else:
+            self.agents.append(agents[0])
         
     def create_obstacles(self, count = None):
         max_trys = 2000

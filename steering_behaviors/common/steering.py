@@ -100,6 +100,10 @@ class SteeringBehaviors:
         if self.is_on(Behavior.FOLLOW_PATH):
             self._steering_force += self.follow_path( self.path )
             
+        if self.is_on(Behavior.OFFSET_PURSUIT):
+            self._steering_force += self.offset_pursuit( self._entity.leader,
+                                                         Vector2(BehaviorParams.offset_pursuit_offset)) 
+            
         return self._steering_force
 
     def on(self, behavior):
@@ -485,6 +489,31 @@ class SteeringBehaviors:
             return self.seek(self.path.current_way_point)
         else:
             return self.arrive(self.path.current_way_point, Decelaration.NORMAL)
+
+
+    ## ---------------------------------------------------
+    ## Offset Pursuit
+    ## 
+    ##
+    ##       
+    def offset_pursuit(self, leader, offset):
+        entity = self._entity
+        world_offset_pos = Tx.point_to_world_space(offset,
+                                                   leader.exact_pos,
+                                                   leader.heading,
+                                                   leader.side)
+
+        to_offset = world_offset_pos - entity.exact_pos
+
+        # the lookahead time is proportional to the distance between the leader
+        # and the pursuer; and is inversely proportional to the sum of both agent's
+        # velocities
+        lookahead_time = to_offset.length() / ( entity.max_speed + leader.speed )
+
+        # now arrive at the predicted future position of the offset
+        
+        return self.arrive( world_offset_pos + leader.velocity * lookahead_time, Decelaration.FAST)
+
         
     
     ## ---------------------------------------------------

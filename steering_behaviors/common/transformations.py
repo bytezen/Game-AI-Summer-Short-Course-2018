@@ -127,7 +127,6 @@ def point_to_world_space(point,position,fwd,side,scale=Vector2(1.0,1.0)):
         mat.scale(scale)
 
     mat.rotate(fwd,side)
-    
     mat.translate(temp_position.x, temp_position.y)
     
     return mat.transform( temp_point )

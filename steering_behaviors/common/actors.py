@@ -9,7 +9,7 @@ from common.steering import SteeringBehaviors
 from common.behavior import Behavior
 from common.path import Path
 from math import cos,sin,degrees,radians
-from random import choice
+import random
 
 
 
@@ -86,6 +86,7 @@ class Vehicle(Actor2):
 
     #Target indices for different behaviors that require additional actors
     HUNTER_INDEX = 4
+    LEADER_INDEX = 3
 
     # Document the constructor. Essentially what we are doing here
     # is handling all of the vehicle specific args as positional parameters
@@ -112,7 +113,9 @@ class Vehicle(Actor2):
 
         self._world = world
 
-        boid = boid if boid in Vehicle.BOID_IMG.keys() else 'red'
+        if not(boid in Vehicle.BOID_IMG.keys()):
+            boid = random.choice(BOID_IMG.values())
+            
         super().__init__(Vehicle.BOID_IMG[boid], **kwargs)
 
         #TODO: Check that we have a position in kwargs
@@ -231,6 +234,12 @@ class Vehicle(Actor2):
 
     def path_follow_off(self):
         self.behavior_off(Behavior.FOLLOW_PATH)        
+
+    def offset_pursuit_on(self):
+        self.behavior_on(Behavior.OFFSET_PURSUIT)
+
+    def offset_pursuit_off(self):
+        self.behavior_off(Behavior.OFFSET_PURSUIT)        
         
     def behavior_on(self, behavior):
         print('turning on behavior: ', Behavior.str(behavior))
@@ -348,6 +357,14 @@ class Vehicle(Actor2):
         self.targets[self.HUNTER_INDEX] = actor
 
     @property
+    def leader(self):
+        return self.targets[self.LEADER_INDEX]
+
+    @leader.setter
+    def leader(self, actor):
+        self.targets[self.LEADER_INDEX] = actor
+
+    @property
     def path(self):
         return self._steering.path
 
@@ -380,7 +397,7 @@ class Obstacle(Actor2):
 
     @classmethod
     def img_file(cls):
-        return Obstacle.IMG_FILE + str(choice(range(9)))
+        return Obstacle.IMG_FILE + str(random.choice(range(9)))
 
 
 
