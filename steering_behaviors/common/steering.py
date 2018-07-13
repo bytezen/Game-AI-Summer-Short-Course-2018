@@ -1,8 +1,15 @@
+import sys
+
+sys.path.append('..')
+print('sys path', sys.path)
+
+
+
 from pygame.math import Vector2
 from enum import IntEnum
 from random import random
 from math import sqrt, pi
-import sys
+
 
 from common.params import ObstacleAvoidanceParams, WallAvoidanceParams, WanderParams, BehaviorParams
 from common.behavior import Behavior
@@ -45,6 +52,10 @@ class Decelaration(IntEnum):
 ##    target = Vector2(0,-1)
     
 class SteeringBehaviors:
+    """
+    Class that encapsulates a host of steering behaviors that can be applied to
+    an entity. Entitiies are of type Actor. See the Actor documentation for how to use
+    """
     def __init__(self, entity):
         """
             Create a steering behaviors for entity. Entity is expected to be of
