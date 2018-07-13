@@ -38,6 +38,8 @@ def tag_neighbors(actor, objs, dist):
 ## 
 ##   
 class Actor2(Actor):
+    _ID = 0
+    
     def __init__(self,*args,**kwargs):
         super().__init__(*args,**kwargs)
         self._angle = 0.0
@@ -50,6 +52,10 @@ class Actor2(Actor):
                                          self._orig_surf.get_height())
         self.exact_pos = Vector2(self.pos)        
 ##        print('Actor2 init: ',args)
+
+        #Assign a unique ID and update the ID store for the next Actor
+        self.id = Actor2._ID
+        Actor2._ID +=1 
 
 
     def tag(self):
@@ -98,6 +104,7 @@ class Vehicle(Actor2):
     # This class will also handle the image for the Vehicle internally.
     def __init__(self,world,vel,mass,max_speed,max_turn_rate,max_force,boid=None,**kwargs):
 
+    
         # this will also initialize our heading and our side vector
         self.velocity = Vector2(vel)
         self.max_speed = max_speed
@@ -131,6 +138,7 @@ class Vehicle(Actor2):
         self.time_elapsed = 0.0
 
         self.hud = Hud(self)
+        self.hud.info_mode()
 
     def update(self,dt):
         #some behaviors need to know the time since the last update
@@ -171,7 +179,6 @@ class Vehicle(Actor2):
 
         # positive is counterclockwise,but we want to rotate clockwise for positive
         self.angle = -self.heading.as_polar()[1]
-
 
 
     def seek_on(self):
