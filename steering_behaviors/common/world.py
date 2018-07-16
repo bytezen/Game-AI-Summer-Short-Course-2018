@@ -42,6 +42,7 @@ class GameWorld:
         self.show_detection_box = False
         self.render_neighbors = False
         self.show_tagged = True
+        self.show_hud = True
 
 
         self.show_cell_space_info = False
@@ -62,6 +63,7 @@ class GameWorld:
         self.show_detection_box = False
         self.render_neighbors = False
         self.show_tagged = False
+        self.show_hud = False        
 
 
         self.show_cell_space_info = False
@@ -137,6 +139,8 @@ class GameWorld:
         #TODO: use cell space partitioning for this
         Actors.tag_neighbors(actor, objs , search_range)
 
+    def tag_vehicles_in_view_range(self, actor, objs, search_range):
+        Actors.tag_neighbors(actor, objs, search_range)
 
     def update(self, time_elapsed):
         if self.paused:

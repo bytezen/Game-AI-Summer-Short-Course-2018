@@ -5,11 +5,17 @@ class BehaviorParams:
     threat_scan_distance = 100
     path_follow_scan_distance = 40
     offset_pursuit_offset = 15
+    # controls how far away an agent can sense the environment
+    view_distance = 100
+    
+class FlockingParams:
+    view_distance = 100
+    separation_multiplier = 1000
     
 class WanderParams:
-    jitter = 5.0
-    radius = 50.0
-    distance = 50.0
+    jitter = 10.0
+    radius = 25.0
+    distance = 0.0
     target = Vector2(0,-1)
 
 class ObstacleAvoidanceParams:

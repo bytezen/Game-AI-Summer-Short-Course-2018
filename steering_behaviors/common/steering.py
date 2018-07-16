@@ -7,11 +7,12 @@ print('sys path', sys.path)
 
 from pygame.math import Vector2
 from enum import IntEnum
-from random import random
+import random
 from math import sqrt, pi
 
 
-from common.params import ObstacleAvoidanceParams, WallAvoidanceParams, WanderParams, BehaviorParams
+from common.params import ObstacleAvoidanceParams, WallAvoidanceParams, WanderParams, BehaviorParams,FlockingParams
+                        
 from common.behavior import Behavior
 from common.geometry import line_intersection_get_distance_point
 
@@ -66,17 +67,31 @@ class SteeringBehaviors:
         self._steering_force = Vector2()
         self._flags = Behavior.NONE
 
-        self.wander_params = WanderParams()
+##        self.wander_params = WanderParams()
         self.obstacle_params = ObstacleAvoidanceParams()
         self.wall_params = WallAvoidanceParams()
         self.behavior_params = BehaviorParams()
+##        self.view_distance = BehaviorParams.view_distance
 
+        #create a random point on the wander circle
+        self.wander_target = Tx.random_vector2() * WanderParams.radius
+        
         self.feelers = [0,0,0]
         self.path = None
         
 
     def calculate(self):
         self._steering_force *= 0
+        entity = self._entity
+        
+        # Tag vehicles within range
+        # as a pre-step for calculating flocking
+        if self.is_on(Behavior.ALIGNMENT) \
+           or self.is_on(Behavior.SEPARATION) \
+           or self.is_on(Behavior.COHESION):
+            
+            entity.world.tag_vehicles_in_view_range(entity, entity.world.agents, FlockingParams.view_distance)
+            
 
         if self.is_on(Behavior.SEEK):
             self._steering_force += self.seek( self._entity.world.crosshair )
@@ -113,7 +128,11 @@ class SteeringBehaviors:
             
         if self.is_on(Behavior.OFFSET_PURSUIT):
             self._steering_force += self.offset_pursuit( self._entity.leader,
-                                                         Vector2(BehaviorParams.offset_pursuit_offset)) 
+                                                         Vector2(BehaviorParams.offset_pursuit_offset))
+
+        if self.is_on(Behavior.SEPARATION):
+            self._steering_force += self.separation( self._entity.world.agents )
+                                                     
             
         return self._steering_force
 
@@ -254,36 +273,42 @@ class SteeringBehaviors:
     def wander(self):
         entity = self._entity
 
-        params = self.wander_params
+        params = WanderParams #self.wander_params
 
         ## from M.Buckland:
         ## this behavior is dependent on the update rate, so this line must
         ## be included when using time independent framerate.        
 ##        jitter_this_time_slice = params.jitter * entity.time_elapsed
 
-        jitter_this_time_slice = params.jitter
+##        jitter_this_time_slice = params.jitter
         
-        randomVec = Vector2( (random()*2.0-1.0) * jitter_this_time_slice, \
-                             (random()*2.0-1.0) * jitter_this_time_slice )
+##        randomVec = Vector2( (random.random()*2.0-1.0) * WanderParams.jitter * entity.time_elapsed, \
+##                             (random.random()*2.0-1.0) * WanderParams.jitter * entity.time_elapsed )
 
-        params.target += randomVec
+        self.wander_target.x += (random.random()*2.0-1.0) * WanderParams.jitter #* entity.time_elapsed
+        self.wander_target.y += (random.random()*2.0-1.0) * WanderParams.jitter #* entity.time_elapsed        
+
+##        params.target += randomVec
 
         # project the target onto a point on the unit circle
-        params.target.normalize_ip()
+##        params.target.normalize_ip()
+        self.wander_target.normalize_ip()
 
         # increase the length of the vector to the same radius
         # of the wander circle
-        params.target *= params.radius
+##        params.target *= params.radius
+        self.wander_target *= WanderParams.radius
 
         
         # move the wander circle in front of us
-        target = params.target + Vector2(params.distance,0)
+##        target = params.target + Vector2(params.distance,0)
+        target_for_this_iteration = self.wander_target + Vector2(WanderParams.distance,0) 
 
         # tramsform the target into world coordinates
-        target.rotate_ip(entity.angle)
+        target_for_this_iteration.rotate_ip(entity.angle)
 
 
-        return target
+        return target_for_this_iteration
 
 
     ## ---------------------------------------------------
@@ -525,6 +550,36 @@ class SteeringBehaviors:
         
         return self.arrive( world_offset_pos + leader.velocity * lookahead_time, Decelaration.FAST)
 
+
+    ## ---------------------------------------------------
+    ## Separation
+    ## 
+    ##
+    ##       
+    def separation(self, neighbors):
+        steering_force = Vector2()
+
+        def evade_target(neighbor):
+            if self._entity.evade_target == None:
+                return False
+            else:
+                return neighbor.id == self._entity.evade_target.id
+
+        for n in neighbors:
+            if n.tagged \
+               and n.id != self._entity.id \
+               and not evade_target(n):
+
+                to = self._entity.exact_pos - n.exact_pos
+                # make the force inversely proportional to the distance squared
+                # if the distance is small then distance * distance will be even smaller
+                # divide a constant by this distance squared factor number to get the force
+                steering_force +=  to * ( FlockingParams.separation_multiplier /  to.length_squared() )  #to.normalize() / to.length()                
+
+        if self._entity.id == 1:
+            print("separation force = ", steering_force)
+        return steering_force
+        
         
     
     ## ---------------------------------------------------
@@ -558,8 +613,7 @@ class SteeringBehaviors:
         # Render Wander if relevant     
         if world.show_wander_circle \
            and self.is_on(Behavior.WANDER):
-
-            params = self.wander_params
+            params = WanderParams #self.wander_params
 
             #get the wander circle center in world coordinates
             wander_center = Vector2(params.distance,0)
@@ -570,13 +624,13 @@ class SteeringBehaviors:
             pygame.gfxdraw.aacircle(surface, \
                                     int(wander_center.x),
                                     int(wander_center.y),
-                                    int(self.wander_params.radius),
+                                    int(WanderParams.radius),
                                     (255,0,0))
         
 
             #draw the wander target
-            wander_target = self.wander_params.target.rotate(self._entity.angle)
-            wander_target += wander_center #self._entity.exact_pos
+            wander_target = self.wander_target.rotate(self._entity.angle) + wander_center #WanderParams.target.rotate(self._entity.angle)
+            #wander_target += wander_center #self._entity.exact_pos
             pygame.gfxdraw.filled_circle(surface,
                                          int(wander_target.x),
                                          int(wander_target.y),

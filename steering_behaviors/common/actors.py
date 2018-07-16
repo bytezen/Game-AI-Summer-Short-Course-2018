@@ -89,8 +89,9 @@ class Actor2(Actor):
 class Vehicle(Actor2):
     IMG_FILE = 'player'
 
-    BOID_IMG = { 'red':'boid1', 'blue':'boid2', 'green':'boid3', 'purple': 'boid4'}
-
+##    BOID_IMG = { 'red':'boid1', 'blue':'boid2', 'green':'boid3', 'purple': 'boid4'}
+    BOID_IMG = { 'red':'boid1_small', 'blue':'boid2_small', 'green':'boid3_small', 'purple': 'boid4_small'}
+    
     #Target indices for different behaviors that require additional actors
     HUNTER_INDEX = 4
     LEADER_INDEX = 3
@@ -152,8 +153,11 @@ class Vehicle(Actor2):
 
         accel = self.steering_force / self.mass
 ##        print("      VElocity before accel = ", self.velocity)
+        
         self.velocity += accel * dt
-##        print("      VElocity AFTER accel = ", self.velocity)        
+##        if self.id == 2 :
+##            print("     entity{0}: VElocity AFTER accel = ".format(self.id), self.velocity * dt)
+        
         truncate_ip( self.velocity, self.max_speed)
 ##        print("      VElocity AFTER truncate = ", self.velocity)                
         self.exact_pos += self.velocity * dt
@@ -251,7 +255,25 @@ class Vehicle(Actor2):
         self.behavior_on(Behavior.OFFSET_PURSUIT)
 
     def offset_pursuit_off(self):
-        self.behavior_off(Behavior.OFFSET_PURSUIT)        
+        self.behavior_off(Behavior.OFFSET_PURSUIT)              
+
+    def alignment_on(self):
+        self.behavior_on(Behavior.ALIGNMENT)
+
+    def alignment_off(self):
+        self.behavior_off(Behavior.ALIGNMENT)            
+
+    def separation_on(self):
+        self.behavior_on(Behavior.SEPARATION)
+
+    def separation_off(self):
+        self.behavior_off(Behavior.SEPARATION)        
+        
+    def cohesion_on(self):
+        self.behavior_on(Behavior.COHESION)
+
+    def cohesion_off(self):
+        self.behavior_off(Behavior.COHESION)        
         
     def behavior_on(self, behavior):
         print('turning on behavior: ', Behavior.str(behavior))
@@ -309,7 +331,8 @@ class Vehicle(Actor2):
                              int(self.exact_pos.y + f.y),
                              pg.Color(200,0,0))
             #hud
-            self.hud.draw(screen)
+            if self._world.show_hud:
+                self.hud.draw(screen)
                              
                              
 
@@ -324,8 +347,11 @@ class Vehicle(Actor2):
     @velocity.setter
     def velocity(self,vec):
         self._velocity = Vector2(vec)
+##        if self._velocity.length() > 0.001:
         self.heading = self.velocity.normalize()
         self.side = self.heading.rotate(90)
+##        else:
+            
 
     @property
     def heading(self):

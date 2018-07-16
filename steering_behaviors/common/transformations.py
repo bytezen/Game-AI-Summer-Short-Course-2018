@@ -1,5 +1,8 @@
 import numpy as np
 from pygame.math import Vector2
+import random
+
+
 
 class C2DMatrix:
     
@@ -182,6 +185,13 @@ def create_whiskers(num_whiskers, whisker_length, fov, facing, origin):
     them. (like the spokes of a wheel clipped to a specific segment size)
     """
     pass
+
+def random_vector2():
+    angle = random.random() * 360
+    vec = Vector2(1,)
+    vec.rotate_ip(angle)
+    return vec
+
 
 
 ##
