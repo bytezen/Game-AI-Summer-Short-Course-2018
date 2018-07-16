@@ -576,8 +576,7 @@ class SteeringBehaviors:
                 # divide a constant by this distance squared factor number to get the force
                 steering_force +=  to * ( FlockingParams.separation_multiplier /  to.length_squared() )  #to.normalize() / to.length()                
 
-        if self._entity.id == 1:
-            print("separation force = ", steering_force)
+
         return steering_force
         
         
