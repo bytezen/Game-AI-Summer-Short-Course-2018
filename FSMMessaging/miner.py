@@ -1,4 +1,4 @@
-from fsm import BaseGameEntity
+from fsm import BaseGameEntity, StateMachine
 from miner_states import GoHomeAndSleepTilRested
 from constants import Location
 
@@ -8,21 +8,27 @@ class Miner(BaseGameEntity):
     THIRST_LEVEL = 5
     TIREDNESS_THRESHOLD = 5
     
-    def __init__(self,name='anonymous'):
+    def __init__(self,name='anonymous',mid=None):
         super().__init__()
 
+        if mid != None:
+            #override the assigned id if the user passes one in
+            self.id = mid        
+
+        self.name = name
         self.location = Location.saloon
         self.gold_carried = 0
         self.money_in_bank = 0
         self.thirst = 0
         self.fatigue = 0
-        self.current_state = GoHomeAndSleepTilRested.instance()
-        self.name = name
+        self.state_machine = StateMachine(self)
+        self.state_machine.current_state = GoHomeAndSleepTilRested.instance()
 
-##    def change_state(self, new_state):
-##        self.current_state.exit( self )
-##        self.current_state = new_state
-##        self.current_state.enter(self)
+
+    def change_state(self, new_state):
+        self.current_state.exit( self )
+        self.current_state = new_state
+        self.current_state.enter(self)
 
     def add_to_gold_carried(self, val):
         self.gold_carried += val
@@ -59,10 +65,11 @@ class Miner(BaseGameEntity):
 
     def update(self):
         self.thirst += 1
+        self.state_machine.update()
 
-        if self.current_state:
-            self.current_state.execute(self)
-
+    def handle_message(self,msg):
+        return self.state_machine.handle_message(msg)
+        
     def __repr__(self):
         return self.name
 

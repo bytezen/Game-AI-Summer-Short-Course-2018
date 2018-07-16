@@ -1,4 +1,4 @@
-from fsm import BaseGameEntity
+from fsm import BaseGameEntity, StateMachine
 from miner_states import GoHomeAndSleepTilRested
 from constants import Location
 
@@ -11,13 +11,15 @@ class Miner(BaseGameEntity):
     def __init__(self,name='anonymous'):
         super().__init__()
 
-        self.location = Location.saloon
+        self.location = Location.shack
         self.gold_carried = 0
         self.money_in_bank = 0
         self.thirst = 0
         self.fatigue = 0
-        self.current_state = GoHomeAndSleepTilRested.instance()
+##        self.current_state = GoHomeAndSleepTilRested.instance()
         self.name = name
+        self.state_machine = StateMachine(self)
+        self.state_machine.current_state = GoHomeAndSleepTilRested.instance()
 
 ##    def change_state(self, new_state):
 ##        self.current_state.exit( self )
@@ -59,9 +61,9 @@ class Miner(BaseGameEntity):
 
     def update(self):
         self.thirst += 1
-
-        if self.current_state:
-            self.current_state.execute(self)
+        self.state_machine.update()
+##        if self.current_state:
+##            self.current_state.execute(self)
 
     def __repr__(self):
         return self.name
