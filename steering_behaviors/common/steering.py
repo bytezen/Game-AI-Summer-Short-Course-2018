@@ -129,9 +129,13 @@ class SteeringBehaviors:
         if self.is_on(Behavior.OFFSET_PURSUIT):
             self._steering_force += self.offset_pursuit( self._entity.leader,
                                                          Vector2(BehaviorParams.offset_pursuit_offset))
-
+            
         if self.is_on(Behavior.SEPARATION):
             self._steering_force += self.separation( self._entity.world.agents )
+
+        if self.is_on(Behavior.ALIGNMENT):
+            self._steering_force += self.alignment( self._entity.world.agents )
+                                                     
                                                      
             
         return self._steering_force
@@ -559,16 +563,17 @@ class SteeringBehaviors:
     def separation(self, neighbors):
         steering_force = Vector2()
 
-        def evade_target(neighbor):
+        def is_evade_target(neighbor):
             if self._entity.evade_target == None:
                 return False
             else:
                 return neighbor.id == self._entity.evade_target.id
 
+        #filter out neighbors that are us, or not tagged, or someone that we should be evading
         for n in neighbors:
             if n.tagged \
                and n.id != self._entity.id \
-               and not evade_target(n):
+               and not is_evade_target(n):
 
                 to = self._entity.exact_pos - n.exact_pos
                 # make the force inversely proportional to the distance squared
@@ -578,7 +583,55 @@ class SteeringBehaviors:
 
 
         return steering_force
+
+
+    ## ---------------------------------------------------
+    ## Aignment
+    ## 
+    ##
+    ##       
+    def alignment(self, neighbors):
+        avg_heading = Vector2()
+
+        neighbor_count = 0
+
+
+        def is_evade_target(neighbor):
+            if self._entity.evade_target == None:
+                return False
+            else:
+                return neighbor.id == self._entity.evade_target.id        
+
+        #filter out neighbors that are us, or not tagged, or someone that we should be evading
+        for n in neighbors:
+            if n.tagged \
+               and n.id != self._entity.id \
+               and not is_evade_target(n):
+
+                avg_heading += n.heading
+                neighbor_count += 1
         
+        if neighbor_count > 0:
+##            print("entity{0} total_heading (before averaging) = {1}".format(self._entity.id,avg_heading))                        
+            avg_heading /= neighbor_count
+##            print("     avg_alignment_heading = {0}".format(avg_heading))                        
+            avg_heading -= self._entity.heading
+##            print("     alignment adjusted for ME = {0}".format(avg_heading))
+
+            avg_heading *= FlockingParams.alignment_multiplier
+
+        
+        return avg_heading
+        
+
+
+    ## ---------------------------------------------------
+    ## Cohesion
+    ## 
+    ##
+    ##       
+    def cohesion(self, neighbors):
+        pass    
         
     
     ## ---------------------------------------------------

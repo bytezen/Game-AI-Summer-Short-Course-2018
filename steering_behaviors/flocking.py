@@ -4,6 +4,7 @@ import common.actors as Actors
 from common.behavior import Behavior
 import common.params as Params
 from common.world import GameWorld
+import common.transformations as Tx
 
 from pygame.math import Vector2
 import random
@@ -21,9 +22,10 @@ MAX_SPEED = 100 # pixels / second
 MAX_FORCE = 1000 # pixels / second^2
 MAX_TURN_RATE = 100 # degrees / second
 INIT_VEL = Vector2(100,0)
-
+FLOCK_SIZE = 10
 
 world = GameWorld(WIDTH,HEIGHT)
+
 
 
 # main Vehicle
@@ -37,7 +39,7 @@ leader = Vehicle(world=world, \
                   color='red')
 
 flock = []
-for i in range(10):
+for i in range(FLOCK_SIZE):
     vel = Vector2(1,)
     vel.rotate_ip(random.randint(0,359))
     vel *= random.randint(20,30)
@@ -48,7 +50,8 @@ for i in range(10):
                   max_speed=MAX_SPEED, \
                   max_force=MAX_FORCE, \
                   max_turn_rate=MAX_TURN_RATE, \
-                  vel= 0.5 * INIT_VEL,
+                  #vel=random.uniform(-1,1) * INIT_VEL, 
+                  vel= Tx.random_vector2() * 50, \
                   color = random.choice(['blue','green','purple']))
     
 
@@ -59,11 +62,12 @@ def start():
     world.add_agent(leader)
 
     for i in flock:
-        i.wander_on()
+##        i.wander_on()
         world.add_agent(i)
 
     for i in world.agents:
-        i.separation_on()
+        i.alignment_on()        
+##        i.separation_on()
 ##        i.wander_on()
 
     #make sure everything is off to begin so that we can customize

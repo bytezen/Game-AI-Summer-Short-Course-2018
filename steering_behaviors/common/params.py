@@ -7,10 +7,12 @@ class BehaviorParams:
     offset_pursuit_offset = 15
     # controls how far away an agent can sense the environment
     view_distance = 100
+    steering_force_tweaker = 200
     
 class FlockingParams:
-    view_distance = 100
+    view_distance = 10
     separation_multiplier = 1000
+    alignment_multiplier = 1000    
     
 class WanderParams:
     jitter = 10.0
