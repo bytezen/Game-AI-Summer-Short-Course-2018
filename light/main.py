@@ -1,6 +1,6 @@
 import sys
-import light_statemachine as State
-from light_statemachine import Light
+import light_states as State
+from light_with_state import Light
 
 import pygame as pg
 from pygame import Color
