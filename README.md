@@ -1,1 +1,0 @@
-# Game-AI-Summer-Short-Course-2018
