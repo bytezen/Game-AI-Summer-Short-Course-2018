@@ -1,6 +1,7 @@
 import pygame as pg
 from pygame.locals import *
 from boid import Boid
+from game_world import GameWorld
 
 import random
 import sys
@@ -15,12 +16,12 @@ clock = pg.time.Clock()
 target = pg.image.load('images/target.png').convert_alpha()
 target_pos = (250,250)
 
-BOID_NUMBER = 1
+BOID_NUMBER = 20
 boids = []
 for i in range(BOID_NUMBER):
-    boid = Boid(color=random.choice(['red','blue','green','purple']))
-    boid.pos = (random.randint(0, 500), random.randint(0,500))
-    boid.max_speed = random.randint(100,200)
+    boid = Boid(GameWorld(500,500), color=random.choice(['red','blue','green','purple']))
+    boid.pos = (random.randint(200, 400), random.randint(200,400))
+    boid.max_speed = random.randint(40,80)
     boid.flee_target = target_pos
     boid.flee_on()
 
@@ -34,7 +35,7 @@ while True:
         if event.type == MOUSEBUTTONUP:
             target_pos = event.pos
             for b in boids:
-                b.seek_target = target_pos
+                b.flee_target = target_pos
         
         if event.type == QUIT:
             pg.display.quit()

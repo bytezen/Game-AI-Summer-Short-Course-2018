@@ -44,7 +44,7 @@ class Boid:
     """
     _ID = 0
     
-    def __init__(self, pos=(0,0), vel=(0,0), mass = 1.0, color='red'):
+    def __init__(self, world, pos=(0,0), vel=(0,0), mass = 1.0, color='red'):
 
         self.pos = Vector2(pos)
         self.mass = mass
@@ -63,6 +63,8 @@ class Boid:
         self.seek_target = Vector2(100,100)
         self.max_force = MAX_FORCE
         self.max_speed = MAX_SPEED
+
+        self.world = world
 
               
     @property
@@ -107,6 +109,19 @@ class Boid:
         #position
         # position = positionInitial + velocity * changeInTime
         self.pos += self.velocity * dtime
+
+        #wrap the position if it goes off of the screen
+        if self.pos.x < self.world.left:
+            self.pos.x = self.world.right
+            
+        if self.pos.x > self.world.right:
+            self.pos.x = self.world.left
+            
+        if self.pos.y < self.world.top:
+            self.pos.y = self.world.bottom
+            
+        if self.pos.y > self.world.bottom:
+            self.pos.y = self.world.top
 
         #update the angle
         _,self.angle = self.velocity.as_polar()
