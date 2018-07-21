@@ -1,6 +1,5 @@
 import pygame as pg
 from pygame.locals import *
-from steering import Seek
 from boid import Boid
 
 import random

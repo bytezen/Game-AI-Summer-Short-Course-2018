@@ -1,9 +1,10 @@
 import pygame as pg
 from pygame.math import Vector2
 import pygame.gfxdraw
-import steering as Behavior
+import steering as BehaviorType
 import util
 
+from seek import SEEK
 
 pg.init()
 IMAGE_PATH = 'images/'
@@ -139,11 +140,11 @@ class Boid:
         if any([ b == Behavior.SEEK for b in self.steering]):
             return
 
-        self.steering.append(Behavior.SEEK) 
+        self.steering.append(SEEK) 
         
     def seek_off(self):
         try:
-            self.steering.remove( Behavior.SEEK )
+            self.steering.remove(SEEK)
         except:
             pass
 
