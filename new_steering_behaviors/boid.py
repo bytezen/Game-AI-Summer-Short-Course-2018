@@ -5,6 +5,7 @@ import steering as BehaviorType
 import util
 
 from seek import SEEK
+from flee import FLEE
 
 pg.init()
 IMAGE_PATH = 'images/'
@@ -134,12 +135,12 @@ class Boid:
             steering_force += behavior.calculate(self)
 
         return steering_force
+
             
     def seek_on(self):
         # TODO: make self.steering a set
         if any([ b == Behavior.SEEK for b in self.steering]):
             return
-
         self.steering.append(SEEK) 
         
     def seek_off(self):
@@ -147,6 +148,18 @@ class Boid:
             self.steering.remove(SEEK)
         except:
             pass
+            
+    def flee_on(self):
+        if any([ b == Behavior.FLEE for b in self.steering]):
+            return
+        self.steering.append(FLEE) 
+        
+    def flee_off(self):
+        try:
+            self.steering.remove(FLEE)
+        except:
+            pass
+
 
 
 def _get_image(color):
