@@ -20,7 +20,7 @@ class Display:
 
 class Params:
     player_kicking_accuracy = 0.99
-    friction = 0.95 #0.015
+    friction = -0.015 #0.95 #0.015
     
 class Model(object):
     _instance = None
