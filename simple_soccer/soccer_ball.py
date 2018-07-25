@@ -132,7 +132,6 @@ class Ball(MovingEntity):
 
         #testing
 ##        self.predicted_position = None
-
 ##        self.display_list = []
 
     def update(self):
@@ -142,31 +141,26 @@ class Ball(MovingEntity):
         test_wall_collision(self,self.pitch_boundary,screen)
         
         # debug - reset predicted position so we don't render it
-        if self.speed == 0:
-            self.predicted_position = None
+##        if self.speed == 0:
+##            self.predicted_position = None
 
         self.prev_pos = self.pos
 
-##        test_wall_collision(self,self.pitch_boundary,screen)
 
         # if we are moving fast enough to overcome friction
         if self.velocity.length_squared() > self.model.friction * self.model.friction:
             friction_force = self.model.friction 
-##            print('\t...friction_force = ', friction_force, end='')
             friction_force = friction_force * self.heading
-##            print('   ...friction scaled to velocity = ', friction_force, end='')
-##            print('   velocity before friction = ', self.velocity)
-            self.velocity += friction_force  #self.velocity * self.model.friction * dt
-##            print('   velocity after friction = ', self.velocity)            
+            self.velocity += friction_force 
             self.pos += self.velocity
 
 
 
     def draw(self):
         super().draw()
-
-        if self.predicted_position != None:
-            screen.draw.filled_circle( self.predicted_position, 5, 'white')
+##        if self.predicted_position != None:
+##            screen.draw.filled_circle( self.predicted_position, 5, 'white')
+        
 ##        if len(self.display_list) > 0:
 ##            for f,ps in self.display_list:
 ##                f(*ps)
@@ -176,18 +170,48 @@ class Ball(MovingEntity):
         accel = Vector2(direction).normalize() * force / self.mass
         # update the velocity
         self.velocity = accel
-        print('{kick} vel = ', self.velocity)
+##        print('{kick} vel = ', self.velocity)
         
         self.predicted_position = self.future_position(180)
-##        self.timer = 
         
 
     
     def handle_message(self,msg):
         return false
 
-    def time_to_cover_distance(self, phrom, to, force):
-        return time_to_cover_distance(self,phrom,to,force,model.friction)
+    def time_to_cover_distance(self, a, b, force):
+        """calculate the time to travel between 2 points assuming the obj has an initial speed of 0.
+
+        Args:
+            obj (assert obj.mass > 0) : the object that is moving
+            a (Vector2, tuple, list): the starting point
+            b (Vector2, tuple, list): the ending point
+            force (float) : magnitude of the force applied to the object
+
+        Returns:
+            time (float) : the time required to reach the destination point; -1 if object cannot reach
+            the destination point. (Object can not overcome friction to get there )
+        """
+        # the speed in the next time step *if* the object applies the force
+        # Note, this function assumes that speeds don't accumulate
+        speed = force / self.mass
+
+        #final velocity at b
+        #
+        #  v^2 = init_v ^ 2 + 2*a*dist
+        #
+        # if init_v ^ 2 + 2*a*dist is negative then the final position can not be reached
+        distance_to_cover = Vector2(a).distance_to(Vector2(b))
+
+        term = speed * speed + 2.0 * distance_to_cover * self.model.friction
+        if term <= 0:
+            return -1
+        else:
+            v = sqrt(term)
+            
+            # final velocity - initial velocity / accel
+            return (v-speed)/friction    
+
 
     def future_position(self, time):
         # using the equation d = ut + 1/2at^2, where d = distance, a = friction,
@@ -198,17 +222,16 @@ class Ball(MovingEntity):
             return self.pos
 
         ut = self.velocity * time
-##        print('\t{future_position} vel,ut = ', self.velocity, ut)
+
         half_at_sq = (0.5 * self.model.friction * time * time) 
-##        print('\t{future_position} half_at_sq = ', half_at_sq, end='' )
+
         half_at_sq = half_at_sq * self.heading
-##        print('\t{future_position} half_at_sq VECTOR = ', half_at_sq, half_at_sq.length())
+
         # this is the magnitude of the distance traveled
         # multiply it times the heading to get the distance and direction
         d = ut + half_at_sq
 
-##        print('\t{future_position} pos, future_pos = ', self.pos, (self.pos + d))
-        print('{future_position} distance predicted = ',d.length(),d)
+
         return self.pos + d
 
 
