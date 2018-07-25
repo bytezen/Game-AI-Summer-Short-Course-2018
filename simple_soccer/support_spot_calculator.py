@@ -1,0 +1,2 @@
+class SupportSpotCalculator:
+    pass
