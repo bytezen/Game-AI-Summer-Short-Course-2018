@@ -21,6 +21,11 @@ class Display:
 class Params:
     player_kicking_accuracy = 0.99
     friction = -0.015 #0.95 #0.015
+    player_mass = 3.0
+    player_max_speed = 30
+    player_max_force = 30
+    player_kick_frequency = 8 
+    player_max_turn_rate = 15
     
 class Model(object):
     _instance = None

@@ -101,10 +101,11 @@ class MovingEntity(BaseEntity):
         self.prev_pos = self.pos
 
 
+
     def _init_moving_props(self,**kwargs):
         # velocity
         try: self.velocity = Vector2(kwargs['velocity'])
-        except: self.velocity = (0,0)
+        except: self.velocity = Vector2(0,0)
 
         # max_speed
         try: self.max_speed = kwargs['max_speed']
@@ -144,7 +145,14 @@ class MovingEntity(BaseEntity):
         self._side = self._heading.rotate( 90 )
 
         return False
-    
+
+    def set_orientation(self, vec):
+        """ sets the heading and side vector based on vec
+        """
+        if vec.length() > 0:
+            self._heading = vec.normalize()
+            self._side = self._heading.rotate( 90 )
+
     @property
     def velocity(self):
         return self._velocity
@@ -154,9 +162,16 @@ class MovingEntity(BaseEntity):
         """also set the heading and the side
         """
         self._velocity = Vector2(value)
+
         if self._velocity.length() > 0:
-            self._heading = self._velocity.normalize()
-            self._side = self._heading.rotate(90)
+            # print(self._velocity, self._velocity.normalize(), type(self._velocity))
+            # print(self.set_direction)
+            # n = self._velocity.normalize()
+            # self.set_direction(n)
+ 
+            self.set_orientation( self._velocity )
+            # self._heading = self._velocity.normalize()
+            # self._side = self._heading.rotate(90)
         else:
             self._heading *= 0
             self._side *= 0
@@ -173,11 +188,20 @@ class MovingEntity(BaseEntity):
     def heading(self):
         return self._heading
 
+    @heading.setter
+    def heading(self, value):
+        if abs(1.0 - value.length()) > 0.00001:
+            self._heading = value.normalize()
+        else:
+            self._heading = value
+
+        self._side = self._heading.rotate(90)
+
+
     @property
     def side(self):
         return self._side
         
-
 
 if __name__ == "__main__":
     #import pygame as pg
