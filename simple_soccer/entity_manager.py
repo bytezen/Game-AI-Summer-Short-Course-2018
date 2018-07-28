@@ -20,10 +20,11 @@ class EntityManager:
         pass
 
     def entity_from_id(self, anId):
+        """ this is the entity from id documentatio"""
         assert (anId in self.entity_map.keys())
         return self.entity_map[anId]
 
-
+    ## remove and entity from the manager if it exists
     def remove_entity(self, anId):
         try:
             del self.entity_map[anId]
@@ -41,3 +42,7 @@ class EntityManager:
 class Entities(Enum):
     ent_miner_bob = 0
     ent_elsa = 1
+
+
+foo = EntityManager()
+foo.       

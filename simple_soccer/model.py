@@ -25,7 +25,7 @@ class Params:
     player_max_speed = 30
     player_max_force = 30
     player_kick_frequency = 8 
-    player_max_turn_rate = 15
+    player_max_turn_rate = 15 
     
 class Model(object):
     _instance = None
