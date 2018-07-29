@@ -1,3 +1,6 @@
+import message
+import entity_manager
+
 class Window:
     pass
 
@@ -28,13 +31,17 @@ class Params:
     player_max_force = 30
     player_kick_frequency = 8 
     player_max_turn_rate = 15 
-    
+
+class Managers:
+    dispatcher = message.Dispatcher.instance()
+    entity_manager = entity_manager.EntityManager.instance() 
+
 class Model(object):
     _instance = None
 
     def __init__(self):
         pass
-        
+
     @classmethod
     def instance(klass):
         if klass._instance == None:
@@ -43,7 +50,9 @@ class Model(object):
 
     def __getattribute__(self,prop ):
         res = None
-        try: # look in display
+
+        # look in display for attribute
+        try:
             res = object.__getattribute__(Display, prop)
         except:
             pass
@@ -51,22 +60,43 @@ class Model(object):
         if res != None:
             return res
 
+        # look in params for attribute
         try:
             res = object.__getattribute__(Params, prop)
         except:
             pass
 
+        if res != None:
+            return res
+
+        # look in managers for attribute
+        try:
+            res = object.__getattribute__(Managers, prop)
+        except:
+            pass
+
+        if res != None:
+            return res
+
+
+        if prop == 'dispatcher':
+            return object.__getattribute__.dispatcher 
+
+
+
+        # if we haven't found anything then we don't have this property
+        # in the model
         if res == None:
             raise AttributeError ('uknown model attribute: {0}'.format(prop))
         else:
             return res
-            
+
 
 
         return res
-        
 
-        
-    
+
+
+
 
 initial_model = Model.instance()

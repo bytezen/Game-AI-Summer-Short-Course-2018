@@ -1,4 +1,5 @@
 from enum import Enum
+import message
 
 ##def ent_miner_bob():
 ##    mgr = EntityManager().instance()
@@ -34,7 +35,7 @@ class EntityManager:
     @classmethod
     def instance(cls):
         if cls._instance == None:
-            _instance = MessageDispatcher()
+            _instance = message.Dispatcher()
 
         return _instance
     
@@ -44,5 +45,3 @@ class Entities(Enum):
     ent_elsa = 1
 
 
-foo = EntityManager()
-foo.       
