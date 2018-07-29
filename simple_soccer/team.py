@@ -7,39 +7,39 @@ import pgzero.screen
 
 import sys
 
-HOME = 'home'
-AWAY = 'away'
+HOME = 'HOME'
+AWAY = 'AWAY'
 
 class SoccerTeam:
 
-    def __init__(self, display_model, pitch, side ):
+    def __init__(self, display_model, pitch, side, dispatcher = Dispatcher.instance() ):
         # self.model = model
         self.pitch = pitch
         self.view = View(display_model)
         self.view.model = self
+        self.side = side
 
         if side == HOME:
             self.color = pg.Color('red')
             self.goal = self.pitch.home_goal
             self.opponent_goal = self.pitch.away_goal
             self.init_heading = Vector2(-1,0)
-            self.home_team = True
-            self.away_team = False
 
-        else:
+        elif side == AWAY:
             self.color = pg.Color( 'blue' )
             self.goal = self.pitch.away_goal
             self.opponent_goal = self.pitch.home_goal
             self.init_heading = Vector2(1,0)
-            self.home_team = False
-            self.away_team = True
 
-        self.players = []
+        else:
+            raise ValueError ( "side must be either 'HOME' or 'AWAY' " )
+
+        self.players = self.create_players()
         self.opponents = []
 
         self._controlling_player = None
         self._supporting_player = None
-        self.receiving_player = None
+        self._receiving_player = None
         self.player_closest_to_ball = None
 
         self.dist_sq_to_ball_from_closest_player = sys.float_info.max
@@ -47,16 +47,16 @@ class SoccerTeam:
         self.fsm = StateMachine(self)
 
 
-
     def create_players(self):
+        players = []
 
-        if self.side == HOME:
+        if self.home_team:
             regions = [16,9,11,12,14]
         else:
             regions = [1,6,8,3,5]
 
         # goal keeper
-        self.players.append( GoalKeeper(home=regions[0]
+        players.append( GoalKeeper(home=regions[0]
                                         , init_state = State.wait) )
 
         for region,img in regions[1:],player_images:
@@ -68,7 +68,10 @@ class SoccerTeam:
                                  ) 
 
             self.model.entityManager.register_entity(player)
-            self.players.append( player )
+            players.append( player )
+
+        return players
+
 
 
     def calculate_closest_player_to_ball(self):
@@ -99,7 +102,10 @@ class SoccerTeam:
 
 
     def return_all_field_players_home(self):
-        pass
+        for player in self.players:
+
+            dispatcher.dispatch_message(Message.SEND_MSG_IMMEDIATELY,
+                                        1,player.id,Message.GO_HOME,None)
 
     def can_shoot(self, ball_pos, power, shot_target = Vector2()):
         pass
@@ -146,8 +152,24 @@ class SoccerTeam:
         pass
     
     @property
+    def home_team(self):
+        return self.side == HOME
+
+    @property
+    def away_team(self):
+        return self.side == AWAY
+
+    @property
     def in_control(self):
         return self.controlling_player != None
+
+    @property
+    def receiving_player(self):
+        return self._receiving_player
+
+    @receiving_player.setter
+    def receiving_player(self, player):
+        self._receiving_player = player
 
     @property
     def controlling_player(self):
@@ -156,7 +178,7 @@ class SoccerTeam:
     @controlling_player.setter
     def controlling_player(self, player):
         self._controlling_player = player
-            
+
     @property
     def supporting_player(self):
         return self._supporting_player
