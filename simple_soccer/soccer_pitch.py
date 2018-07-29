@@ -9,19 +9,13 @@ import model as Model
 from entity import MovingEntity
 from soccer_ball import Ball
 from wall import Wall2D
+from team import SoccerTeam
 import geometry as Geometry
 
 HORIZ_REGIONS = 6
 VERT_REGIONS = 3
 
 
-
-class Team:
-    def __init__(self):
-        pass
-
-    def draw():
-        pass
 
 class Goal:
     #which side of the RECT is the goal line
@@ -31,19 +25,19 @@ class Goal:
         self._scored = False
         self.pos = Vector2(pos)
         self.rect = pg.Rect(pos,(w,h))
-        
+
         self.goal_line = goal_line
         if self.goal_line == Goal.GOAL_LINE_LEFT:
             self.rect.midleft = self.pos
         elif self.goal_line == Goal.GOAL_LINE_RIGHT:
             self.rect.midright = self.pos
-            
+
         #the post closer to top of screen
         if self.goal_line == Goal.GOAL_LINE_LEFT:
             self._left_post = Vector2(self.rect.topleft)
             self._right_post = Vector2(self.rect.bottomleft)
             self.facing = (self._left_post - self._right_post).normalize().rotate(90)
-            
+
         elif self.goal_line == Goal.GOAL_LINE_RIGHT:
             self._left_post = Vector2(self.rect.topright)
             self._right_post = Vector2(self.rect.bottomright)
@@ -80,9 +74,10 @@ class Region(pg.Rect):
 class SoccerPitch:
     # TODO: Refactor the game state functionality and window 
     # into a separate class
-    def __init__(self,width, height, model = Model.initial_model):
+    def __init__(self,width, height, pos = (0,0), model = Model.initial_model):
         self.model = model
         self.surface = pg.Surface((width,height))
+        self.pos = Vector2(pos) #Vector2(20,20) #pos
         self.field = self.surface.get_rect()
         self.field.inflate_ip(-2,-2)
 
@@ -92,10 +87,7 @@ class SoccerPitch:
                   (self.field.bottomright, self.field.bottomleft),
                   (self.field.bottomleft, self.field.topleft)]:
             self.walls.append( Wall2D(a,b,'yellow') )
-            
-        
-        self.home_team = Team()
-        self.away_team = Team()
+
         self.home_goal = Goal( self.field.midleft,
                                self.field.width*0.08,
                                self.field.height*0.25,
@@ -106,7 +98,12 @@ class SoccerPitch:
                                self.field.width*0.08,
                                self.field.height*0.25,
                                'darkblue',
-                               Goal.GOAL_LINE_RIGHT)     
+                               Goal.GOAL_LINE_RIGHT)
+        
+        self.home_team = SoccerTeam(self.model, self,'HOME')
+        self.away_team = SoccerTeam(self.model, self,'AWAY')
+
+        print('pitch === ', self.away_goal )
 
 
         self.playing_area = pg.Rect(20,20,width-40,height-40)
@@ -118,14 +115,13 @@ class SoccerPitch:
 
         self.create_regions(self.playing_area.width // HORIZ_REGIONS,
                             self.playing_area.height // VERT_REGIONS)
-        
-        
-        
-        self.ball= Ball(self.walls, model=self.model,center=(width*0.5,height*0.5))
 
-        
+        self.ball= Ball(self.walls,
+                        model = self.model,
+                        center = self.pos + Vector2(width*0.5,height*0.5))
+
+        # render the pitch onto a surface. This is not drawn until draw is called
         self._render_pitch()
-        print(width, height, self.field.center)
         
         
 ##        self.ball.pos = width * 0.5, height * 0.5
@@ -250,7 +246,7 @@ class SoccerPitch:
     def draw(self,screen):
 
         #render the pitch
-        screen.blit(self.surface,(0,0)) 
+        screen.blit(self.surface,self.pos) 
 
         #render regions
         if self.model.show_regions:
@@ -261,8 +257,9 @@ class SoccerPitch:
 ##        self.ball.draw()
 
         #render the teams
-##        self.home_team.draw()
-##        self.away_team.draw()
+        self.home_team.draw(screen)
+        self.away_team.draw(screen)
+
 
     def toggle_pause(self):
         self.paused != self.paused
@@ -287,13 +284,10 @@ if __name__ =='__main__':
     WIDTH = 300
     HEIGHT = 300
 
-
-        
     p = SoccerPitch(300,300)
-    
+
     def draw():
         screen.fill(Color('white')[:3])
         p.draw(screen)
-        
 
     pgzrun.go()

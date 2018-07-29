@@ -27,6 +27,12 @@ class State:
     def on_message(self, entity, msg):
         raise NotImplemented
 
+    def __repr__(self):
+        try:
+            return self.name
+        except:
+            return "anonState"
+
 
 class StateMachine:
     def __init__(self, owner):
