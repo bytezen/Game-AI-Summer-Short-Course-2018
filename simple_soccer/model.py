@@ -1,6 +1,10 @@
 import message
 import entity_manager
 
+def get_class_attribute_map(cls):
+    _ATTR_MAP[cls] = [prop for prop in dir(cls) if not prop.startswith('__')]
+    return [ (cls, prop) for prop in dir(cls) if not prop.startswith('__') ]
+
 class Window:
     pass
 
@@ -36,8 +40,15 @@ class Managers:
     dispatcher = message.Dispatcher.instance()
     entity_manager = entity_manager.EntityManager.instance() 
 
-class Model(object):
+
+_ATTR_MAP = {}
+_ATTR =  get_class_attribute_map(Display) + \
+         get_class_attribute_map(Params) + \
+         get_class_attribute_map(Managers)
+
+class Model():
     _instance = None
+    DELEGATED_ATTRIBUTES = _ATTR 
 
     def __init__(self):
         pass
@@ -48,55 +59,23 @@ class Model(object):
             klass._instance = Model()
         return klass._instance
 
-    def __getattribute__(self,prop ):
-        res = None
+    def __getattr__(self,prop ):
+        for cls,ps in _ATTR_MAP.items():
+            if prop in ps:
+                return getattr(cls,prop)
 
-        # look in display for attribute
-        try:
-            res = object.__getattribute__(Display, prop)
-        except:
-            pass
+        return object.__getattribute__(self, prop)
 
-        if res != None:
-            return res
+    # from lordmauve of pgzero
+    def __setattr__(self, attr, value):
+        for cls, ps in _ATTR_MAP.items():
+            if attr in ps:
+                return setattr(cls, attr, value)
 
-        # look in params for attribute
-        try:
-            res = object.__getattribute__(Params, prop)
-        except:
-            pass
+        if attr in self.__dict__.keys():
+            return object.__setattr__(self, attr, value)
 
-        if res != None:
-            return res
-
-        # look in managers for attribute
-        try:
-            res = object.__getattribute__(Managers, prop)
-        except:
-            pass
-
-        if res != None:
-            return res
-
-
-        if prop == 'dispatcher':
-            return object.__getattribute__.dispatcher 
-
-
-
-        # if we haven't found anything then we don't have this property
-        # in the model
-        if res == None:
-            raise AttributeError ('uknown model attribute: {0}'.format(prop))
-        else:
-            return res
-
-
-
-        return res
-
-
-
+        raise AttributeError('no property {} found'.format(attr))
 
 
 initial_model = Model.instance()
