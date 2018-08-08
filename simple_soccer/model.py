@@ -18,7 +18,7 @@ class Display:
     show_states = False
     show_ids = False
     show_support_spots = False
-    show_regions = False
+    show_regions = True
     show_controlling_team = False
     show_supporting_player_targets = False
     show_highlight_when_threatened = False
@@ -37,8 +37,8 @@ class Params:
     player_max_turn_rate = 15 
 
 class Managers:
-    dispatcher = message.Dispatcher.instance()
     entity_manager = entity_manager.EntityManager.instance() 
+    dispatcher = message.Dispatcher.instance(entity_manager)
 
 
 _ATTR_MAP = {}

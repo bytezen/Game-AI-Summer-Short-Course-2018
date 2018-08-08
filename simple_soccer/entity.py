@@ -87,7 +87,7 @@ class BaseEntity(Actor):
 ## 
 ## 
 class MovingEntity(BaseEntity):
-    def __init__(self,image,pos=(0,0),
+    def __init__(self,image,
                      velocity=(0,0),
                      max_speed = -1,
                      max_force = -1,

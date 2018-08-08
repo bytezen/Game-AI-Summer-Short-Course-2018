@@ -2,18 +2,16 @@ from pygame.math import Vector2
 from enum import IntEnum
 import random
 from math import sqrt, pi
-
-
 from params import ObstacleAvoidanceParams, WallAvoidanceParams, WanderParams, BehaviorParams,FlockingParams
-                        
-from behaviortypes import BehaviorType
+
+from steering.behaviortypes import Behavior
 from common.geometry import line_intersection_get_distance_point
 
 import common.transformations as Tx
 import pygame as pg
 
-import pygame.gfxdraw
-import pgzrun
+# import pygame.gfxdraw
+# import pgzrun
    
 
 
@@ -56,6 +54,8 @@ class SteeringBehaviors:
 
         self.feelers = [0,0,0]
         self.path = None
+
+        self.target = None
 
     def forward_component(self):
         return self._entity.heading.dot(self.steering_force.normalize())
@@ -757,4 +757,4 @@ class SteeringBehaviors:
 
 
 
-                    
+ 

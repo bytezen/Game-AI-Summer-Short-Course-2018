@@ -1,18 +1,86 @@
-from player import PlayerBase, GoalKeeper, FieldPlayer
+from field_player import GoalKeeper, FieldPlayer
+
+import player_states as PState
+from soccer_pitch import SoccerPitch
 from support_spot_calculator import SupportSpotCalculator
 from fsm import StateMachine
 from pygame.math import Vector2
 import pygame as pg
 import pgzero.screen
 
+import model 
+
 import sys
 
 HOME = 'HOME'
 AWAY = 'AWAY'
 
+class View:
+
+    WIDTH = 600
+    HEIGHT = 50
+    BG_COLOR = pg.Color('aliceblue')
+    BORDER_COLOR = pg.Color('khaki')
+    POS = Vector2(100,0)
+
+
+    def __init__(self, display_model):
+        self.show_model = display_model
+        self.data_model = None
+        self._screen = pgzero.screen.Screen(pg.Surface(( 600, 50 )))
+        self._screen.surface.get_rect().center = (400, 30)
+        self._screen.fill((100,100,100))
+
+        self.pos = View.POS
+
+        rect = self._screen.surface.get_rect().inflate(-2,-2)
+        # pg.draw.rect(self._screen, (100,0,0), rect, 2)
+        self._screen.draw.rect(rect, (100,0,0))
+
+    @property
+    def model(self):
+        pass
+
+    @model.setter
+    def model(self, model):
+        self.data_model = model
+
+    def draw(self,screen):
+        _s = self._screen
+        c = 'blue' if self.data_model.home_team else 'red'
+
+        # Only show the controlling, supporting and possession display stuff
+        if self.data_model.in_control is True:
+
+            # show the controlling team and player at the top of the display
+            if self.show_model.show_controlling_team and self.data_model.in_control :
+                _s.draw.text:(self.team_model.team + ' in control ')
+
+            if self.data_model.controlling_player != None:
+                _s.draw.text('Controlling Player: ' + self.data_model.controlling_player.pId, color=c)
+            # show supporting players target
+            if self.show_model.show_supporting_player_targets:
+                if self.data_model.supporting_player != None:
+                    screen.draw.circle( self.data_model.support_player.steering.target, 5,color=c  )
+
+            # render the sweet spots
+            if self.show_model.show_support_spots:
+                self.data_model.support_spot_calculator.render()
+
+
+        # show the team state
+        if self.show_model.show_team_state:
+            _s.draw.text('team state: ' + str(self.data_model.fsm.current_state),
+                         (30,10),
+                         color=c)
+
+        # self._screen.draw()
+        screen.blit(self._screen.surface, self.pos)
+
+
 class SoccerTeam:
 
-    def __init__(self, display_model, pitch, side, dispatcher = Dispatcher.instance() ):
+    def __init__(self, side, pitch, display_model=model.initial_model, entity_manager=model.initial_model.entity_manager, dispatcher=model.initial_model.dispatcher):
         # self.model = model
         self.pitch = pitch
         self.view = View(display_model)
@@ -51,20 +119,26 @@ class SoccerTeam:
         players = []
 
         if self.home_team:
-            regions = [16,9,11,12,14]
+            regions = [self.pitch.pos_from_region(region) for region in [16,9,11,12,14] ]
         else:
-            regions = [1,6,8,3,5]
+            regions = [self.pitch.pos_from_region(region) for region in [1,6,8,3,5] ]
 
         # goal keeper
-        players.append( GoalKeeper(home=regions[0]
-                                        , init_state = State.wait) )
+        if self.side == HOME:
+            image_file = 'playerredshirt'
+        else:
+            image_file = 'playerblueshirt'
 
+        players.append( GoalKeeper(image_file+'0',
+                                   home=regions[0],
+                                   heading=Vector2(-1,0)
+                                   ) )
+
+        # rest of the team
         for region,img in regions[1:],player_images:
             player = FieldPlayer(img,
-                                 region,
-                                 Vector2(-1,0),
-                                 Vector2(self.init_heading),
-                                 init_state = State.wait 
+                                 home=region,
+                                 heading=Vector2(-1,0)
                                  ) 
 
             self.model.entityManager.register_entity(player)
@@ -194,86 +268,24 @@ class SoccerTeam:
         else:
             return 'Blue'
 
-class View:
-
-    WIDTH = 600
-    HEIGHT = 50
-    BG_COLOR = pg.Color('aliceblue')
-    BORDER_COLOR = pg.Color('khaki')
-    POS = Vector2(100,0)
-
-
-    def __init__(self, display_model):
-        self.show_model = display_model
-        self.data_model = None
-        self._screen = pgzero.screen.Screen(pg.Surface(( 600, 50 )))
-        self._screen.surface.get_rect().center = (400, 30)
-        self._screen.fill((100,100,100))
-
-        self.pos = View.POS
-
-        rect = self._screen.surface.get_rect().inflate(-2,-2)
-        # pg.draw.rect(self._screen, (100,0,0), rect, 2)
-        self._screen.draw.rect(rect, (100,0,0))
-
-    @property
-    def model(self):
-        pass
-
-    @model.setter
-    def model(self, model):
-        self.data_model = model
-
-    def draw(self,screen):
-        _s = self._screen
-        c = 'blue' if self.data_model.home_team else 'red'
-
-        # Only show the controlling, supporting and possession display stuff
-        if self.data_model.in_control is True:
-
-            # show the controlling team and player at the top of the display
-            if self.show_model.show_controlling_team and self.data_model.in_control :
-                _s.draw.text:(self.team_model.team + ' in control ')
-
-            if self.data_model.controlling_player != None:
-                _s.draw.text('Controlling Player: ' + self.data_model.controlling_player.pId, color=c)
-            # show supporting players target
-            if self.show_model.show_supporting_player_targets:
-                if self.data_model.supporting_player != None:
-                    screen.draw.circle( self.data_model.support_player.steering.target, 5,color=c  )
-
-            # render the sweet spots
-            if self.show_model.show_support_spots:
-                self.data_model.support_spot_calculator.render()
-
-
-        # show the team state
-        if self.show_model.show_team_state:
-            _s.draw.text('team state: ' + str(self.data_model.fsm.current_state),
-                         (30,10),
-                         color=c)
-
-        # self._screen.draw()
-        screen.blit(self._screen.surface, self.pos)
 
 
 
+if __name__ == '__main__':
+    import pgzrun
+    import soccer_pitch
+    import team
 
+    WIDTH = 800
+    HEIGHT = 600
 
-# if __name__ == '__main__':
-#     import pgzrun
-#     import soccer_pitch
+    mock_pitch = soccer_pitch.SoccerPitch(WIDTH,HEIGHT)
 
-#     WIDTH = 800
-#     HEIGHT = 600
+    home_team = team.SoccerTeam( HOME, mock_pitch )
 
-#     mock_pitch = soccer_pitch.SoccerPitch(WIDTH,HEIGHT)
+    def draw():
+        mock_pitch.draw(screen)
+        # home_team.draw(screen) 
 
-#     team = SoccerTeam( mock_pitch, HOME)
-
-#     def draw():
-#         mock_pitch.draw(screen)
-#         team.draw(screen) 
-
-#     pgzrun.go()
+    pgzrun.go()
 

@@ -46,6 +46,12 @@ class Wait:
                  klass._instance = klass()
             return klass._instance
 
+      def enter(self, player):
+            print('Player %s enters wait state' % player.id)
+            if not player.pitch.game_on:
+                  player.steering.target = player.home
+
+
 class KickBall:
       _instance = None
 

@@ -3,7 +3,7 @@ from pygame.math import Vector2
 
 
 
-class BehaviorType(IntEnum):
+class Behavior(IntEnum):
     NONE = 0,
     SEEK = 2,
     FLEE = 4,

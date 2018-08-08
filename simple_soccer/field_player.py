@@ -1,13 +1,15 @@
-from model import Model
+import model 
 from pygame.math import Vector2
 from fsm import StateMachine
-import player_state as PState
+import player_states as PState
 from entity import MovingEntity
 from steering.steering import SteeringBehaviors
 
+from config import Config
 
-class FieldPlayer(MovingEntity):
-      def __init__(self, image,home_region, heading, velocity = (0,0), init_state = None, model = Model.instance(),**kwargs):
+class BasePlayer(MovingEntity):
+      def __init__(self,image, pitch, home, heading, model = model.initial_model, **kwargs): 
+            # super().__init__(image, **kwargs)
             super().__init__(image,
                              mass = model.player_mass,
                              max_force = model.player_max_force,
@@ -15,15 +17,53 @@ class FieldPlayer(MovingEntity):
                              max_turn_rate = model.player_max_turn_rate,
                              **kwargs)
 
-            self.home = home_region
-            self.velocity = Vector2(velocity)
+            self.home = Vector2(home)
+            self.pos = Vector2(home)
+            self.velocity = Vector2()
+
+            # in case the velocity is zero
+            if self.speed < 0.00001:
+                  self.set_orientation(Vector2(heading))
+
+            self.model = model
+            self.role = None
+            self.pitch = pitch
+
+            self.steering = SteeringBehaviors(self)
+            self.steering.separation_on()
+
+            self.state = PState.wait
+            self.fsm = StateMachine(self)
+            self.fsm.current_state = self.state
+            self.fsm.previous_state = self.state
+            self.fsm.global_state = PState.global_player
+            self.fsm.current_state.enter(self)
+
+            # TODO: implement and test regulator
+            # self.kick_limiter = Regulator(self.model.player_kick_frequency)
+
+
+
+
+class GoalKeeper(MovingEntity):
+      def __init__(self, image, pitch, home, heading, model = model.initial_model, **kwargs):
+            super().__init__(image,
+                             mass = model.player_mass,
+                             max_force = model.player_max_force,
+                             max_speed = model.player_max_speed,
+                             max_turn_rate = model.player_max_turn_rate,
+                             **kwargs)
+
+            self.home = Vector2(home)
+            self.pos = Vector2(home)
+            self.velocity = Vector2()
 
             # in case the velocity is zero
             if self.speed < 0.00001:
                   self.set_orientation(Vector2(heading))
 
 
-            self.state = init_state
+            self.state = PState.Wait.instance()
             self.model = model
             self.role = None
             self.fsm = StateMachine(self)
@@ -31,12 +71,50 @@ class FieldPlayer(MovingEntity):
             if self.state != None:
                   self.fsm.current_state = self.state
                   self.fsm.previous_state = self.state
-                  self.fsm.global_state = PState.global_player()
+                  self.fsm.global_state = PState.global_player
 
                   self.fsm.current_state.enter(self)
 
             self.steering = SteeringBehaviors(self)
             self.steering.separation_on()
+
+            # TODO: implement and test regulator
+            # self.kick_limiter = Regulator(self.model.player_kick_frequency)
+
+
+
+class FieldPlayer(BasePlayer):
+      def __init__(self, image, pitch, home, heading, model = model.initial_model,**kwargs):
+            super().__init__(image, pitch, home, heading, model, **kwargs)
+
+            # super().__init__(image, **kwargs)
+            # super().__init__(image,
+            #                  mass = model.player_mass,
+            #                  max_force = model.player_max_force,
+            #                  max_speed = model.player_max_speed,
+            #                  max_turn_rate = model.player_max_turn_rate,
+            #                  **kwargs)
+
+            # self.home = Vector2(home)
+            # self.pos = Vector2(home)
+            # self.velocity = Vector2()
+
+            # # in case the velocity is zero
+            # if self.speed < 0.00001:
+            #       self.set_orientation(Vector2(heading))
+
+            # self.model = model
+            # self.role = None
+
+            # self.state = PState.wait
+            # self.fsm = StateMachine(self)
+            # self.fsm.current_state = self.state
+            # self.fsm.previous_state = self.state
+            # self.fsm.global_state = PState.global_player
+            # self.fsm.current_state.enter(self)
+
+            # self.steering = SteeringBehaviors(self)
+            # self.steering.separation_on()
 
             # TODO: implement and test regulator
             # self.kick_limiter = Regulator(self.model.player_kick_frequency)
@@ -56,22 +134,29 @@ class FieldPlayer(MovingEntity):
             self.heading.rotate_ip(turning_force)
 
             self.velocity = self.heading * self.speed
-            
+
 
 if __name__ == '__main__':
       import pgzrun
+      import config
+      from soccer_pitch import SoccerPitch
 
       WIDTH = 400
       HEIGHT = 400
 
-      player = FieldPlayer('playerredshirt5',1,Vector2(-1,0))
-      player.velocity = Vector2(10,25)
-
-      def update(dt):
-            player.update(dt)
+      pitch = SoccerPitch(WIDTH,HEIGHT)
+      # player = Actor('playerredshirt0',pos=(300,200))
+      # player = FieldPlayer('playerredshirt0',home_region = 0, heading=Vector2(-1,0), pos=(300,50))
+      assert False, 'Fix regions array'
+      player = FieldPlayer('playerredshirt0',pitch, home=pitch.pos_from_region(1), heading=Vector2(-1,0) )
 
       def draw():
             screen.fill('white')
+            pitch.draw(screen)
             player.draw()
+            
+      # player.velocity = Vector2(10,25)
 
+      # def update(dt):
+            # player.update(dt)
       pgzrun.go()

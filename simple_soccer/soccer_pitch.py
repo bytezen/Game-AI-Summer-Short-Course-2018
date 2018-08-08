@@ -9,7 +9,7 @@ import model as Model
 from entity import MovingEntity
 from soccer_ball import Ball
 from wall import Wall2D
-from team import SoccerTeam
+# from team import SoccerTeam
 import geometry as Geometry
 
 HORIZ_REGIONS = 6
@@ -72,7 +72,7 @@ class Region(pg.Rect):
             screen.draw.text(str(self.id),center=self.center,color='gray')
         
 class SoccerPitch:
-    # TODO: Refactor the game state functionality and window 
+#     # TODO: Refactor the game state functionality and window 
     # into a separate class
     def __init__(self,width, height, pos = (0,0), model = Model.initial_model):
         self.model = model
@@ -100,11 +100,8 @@ class SoccerPitch:
                                'darkblue',
                                Goal.GOAL_LINE_RIGHT)
         
-        self.home_team = SoccerTeam(self.model, self,'HOME')
-        self.away_team = SoccerTeam(self.model, self,'AWAY')
-
-        print('pitch === ', self.away_goal )
-
+        # self.home_team = SoccerTeam(self.model, self,'HOME')
+        # self.away_team = SoccerTeam(self.model, self,'AWAY')
 
         self.playing_area = pg.Rect(20,20,width-40,height-40)
         self.regions = [None]*(HORIZ_REGIONS * VERT_REGIONS)
@@ -257,8 +254,8 @@ class SoccerPitch:
 ##        self.ball.draw()
 
         #render the teams
-        self.home_team.draw(screen)
-        self.away_team.draw(screen)
+        # self.home_team.draw(screen)
+        # self.away_team.draw(screen)
 
 
     def toggle_pause(self):
@@ -276,15 +273,21 @@ class SoccerPitch:
         assert (idx > 0 and idx < len(self.regions))
 
         return self.regions[idx]
+
+    def pos_from_region(self, idx):
+        region = self.region_from_index(idx)
+        return region.center
         
 
 if __name__ =='__main__':
     import pgzrun
+    from soccer_pitch import SoccerPitch
 
     WIDTH = 300
     HEIGHT = 300
 
     p = SoccerPitch(300,300)
+
 
     def draw():
         screen.fill(Color('white')[:3])
