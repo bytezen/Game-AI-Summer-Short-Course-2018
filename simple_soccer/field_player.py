@@ -147,8 +147,7 @@ if __name__ == '__main__':
       pitch = SoccerPitch(WIDTH,HEIGHT)
       # player = Actor('playerredshirt0',pos=(300,200))
       # player = FieldPlayer('playerredshirt0',home_region = 0, heading=Vector2(-1,0), pos=(300,50))
-      assert False, 'Fix regions array'
-      player = FieldPlayer('playerredshirt0',pitch, home=pitch.pos_from_region(1), heading=Vector2(-1,0) )
+      player = FieldPlayer('playerredshirt0',pitch, home=pitch.pos_from_region(11), heading=Vector2(-1,0) )
 
       def draw():
             screen.fill('white')

@@ -103,7 +103,9 @@ class SoccerPitch:
         # self.home_team = SoccerTeam(self.model, self,'HOME')
         # self.away_team = SoccerTeam(self.model, self,'AWAY')
 
-        self.playing_area = pg.Rect(20,20,width-40,height-40)
+        #playing area with padding
+        # self.playing_area = pg.Rect(20,20,width-40,height-40)
+        self.playing_area = pg.Rect(0,0,width,height)
         self.regions = [None]*(HORIZ_REGIONS * VERT_REGIONS)
         self.keeper_has_ball = False
         self.game_on = False
@@ -229,13 +231,13 @@ class SoccerPitch:
         
     def create_regions(self, width , height ):
         padl,padt = self.playing_area.left, self.playing_area.top
-        
+
         for i in range(len(self.regions)-1,-1,-1):
             row = i // HORIZ_REGIONS
             col = i % HORIZ_REGIONS
-            
+
             self.regions[i] = Region(col * width + padl, row * height + padt, width, height)
-        
+
 
     def update(self, dt):
         pass
@@ -269,13 +271,15 @@ class SoccerPitch:
     def cy(self):
         return self.win_dim.y
 
-    def region_from_index(self, idx):
-        assert (idx > 0 and idx < len(self.regions))
+    def region_from_index(self, id):
+        assert (id >= 0 and id < len(self.regions)), "id == {}".format(id)
+        return self.regions[id]
 
-        return self.regions[idx]
-
-    def pos_from_region(self, idx):
-        region = self.region_from_index(idx)
+    def pos_from_region(self, id):
+        #regions are stored in reverse order
+        #so need to invert the id to get its position
+        #in the array
+        region = self.region_from_index(len(self.regions) - 1 - id)
         return region.center
         
 
