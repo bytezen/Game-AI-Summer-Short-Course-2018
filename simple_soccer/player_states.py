@@ -51,6 +51,15 @@ class Wait:
             if not player.pitch.game_on:
                   player.steering.target = player.home
 
+      def  execute(self, player):
+            if not player.at_target:
+                  player.arrive_on()
+            else:
+                  player.arrive_off()
+                  player.velocity *= 0
+                  player.track_ball()
+
+
 
 class KickBall:
       _instance = None

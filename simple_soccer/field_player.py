@@ -8,7 +8,8 @@ from steering.steering import SteeringBehaviors
 from config import Config
 
 class BasePlayer(MovingEntity):
-      def __init__(self,image, pitch, home, heading, model = model.initial_model, **kwargs): 
+      def __init__(self,image, pitch, team, home, heading, model = model.initial_model, **kwargs): 
+            # super().__init__(image, pitch, team, home, heading, model, **kwargs)
             # super().__init__(image, **kwargs)
             super().__init__(image,
                              mass = model.player_mass,
@@ -16,6 +17,9 @@ class BasePlayer(MovingEntity):
                              max_speed = model.player_max_speed,
                              max_turn_rate = model.player_max_turn_rate,
                              **kwargs)
+
+            #register with the entity_manager
+            model.entity_manager.register(self)
 
             self.home = Vector2(home)
             self.pos = Vector2(home)
@@ -28,6 +32,7 @@ class BasePlayer(MovingEntity):
             self.model = model
             self.role = None
             self.pitch = pitch
+            self.team = team
 
             self.steering = SteeringBehaviors(self)
             self.steering.separation_on()
@@ -42,41 +47,55 @@ class BasePlayer(MovingEntity):
             # TODO: implement and test regulator
             # self.kick_limiter = Regulator(self.model.player_kick_frequency)
 
+      def at_home(self):
+            vpos = Vector2(self.pos)
+            return vpos.distance_to(self.home) < 0.001
+
+      def arrive_on(self):
+            self.steering.arrive_on()
+
+      def arrive_off(self):
+            self.steering.arrive_on()
 
 
 
-class GoalKeeper(MovingEntity):
-      def __init__(self, image, pitch, home, heading, model = model.initial_model, **kwargs):
-            super().__init__(image,
-                             mass = model.player_mass,
-                             max_force = model.player_max_force,
-                             max_speed = model.player_max_speed,
-                             max_turn_rate = model.player_max_turn_rate,
-                             **kwargs)
-
-            self.home = Vector2(home)
-            self.pos = Vector2(home)
-            self.velocity = Vector2()
-
-            # in case the velocity is zero
-            if self.speed < 0.00001:
-                  self.set_orientation(Vector2(heading))
 
 
-            self.state = PState.Wait.instance()
-            self.model = model
-            self.role = None
-            self.fsm = StateMachine(self)
 
-            if self.state != None:
-                  self.fsm.current_state = self.state
-                  self.fsm.previous_state = self.state
-                  self.fsm.global_state = PState.global_player
+class GoalKeeper(BasePlayer):
+      def __init__(self, image, pitch, team, home, heading, model = model.initial_model, **kwargs):
+            super().__init__(image, pitch, team, home, heading, model, **kwargs)
 
-                  self.fsm.current_state.enter(self)
+            # super().__init__(image,
+            #                  mass = model.player_mass,
+            #                  max_force = model.player_max_force,
+            #                  max_speed = model.player_max_speed,
+            #                  max_turn_rate = model.player_max_turn_rate,
+            #                  **kwargs)
 
-            self.steering = SteeringBehaviors(self)
-            self.steering.separation_on()
+            # self.home = Vector2(home)
+            # self.pos = Vector2(home)
+            # self.velocity = Vector2()
+
+            # # in case the velocity is zero
+            # if self.speed < 0.00001:
+            #       self.set_orientation(Vector2(heading))
+
+
+            # self.state = PState.Wait.instance()
+            # self.model = model
+            # self.role = None
+            # self.fsm = StateMachine(self)
+
+            # if self.state != None:
+            #       self.fsm.current_state = self.state
+            #       self.fsm.previous_state = self.state
+            #       self.fsm.global_state = PState.global_player
+
+            #       self.fsm.current_state.enter(self)
+
+            # self.steering = SteeringBehaviors(self)
+            # self.steering.separation_on()
 
             # TODO: implement and test regulator
             # self.kick_limiter = Regulator(self.model.player_kick_frequency)
@@ -84,8 +103,8 @@ class GoalKeeper(MovingEntity):
 
 
 class FieldPlayer(BasePlayer):
-      def __init__(self, image, pitch, home, heading, model = model.initial_model,**kwargs):
-            super().__init__(image, pitch, home, heading, model, **kwargs)
+      def __init__(self, image, pitch, team, home, heading, model = model.initial_model,**kwargs):
+            super().__init__(image, pitch, team, home, heading, model, **kwargs)
 
             # super().__init__(image, **kwargs)
             # super().__init__(image,
@@ -140,6 +159,7 @@ if __name__ == '__main__':
       import pgzrun
       import config
       from soccer_pitch import SoccerPitch
+      import random
 
       WIDTH = 400
       HEIGHT = 400
@@ -147,7 +167,12 @@ if __name__ == '__main__':
       pitch = SoccerPitch(WIDTH,HEIGHT)
       # player = Actor('playerredshirt0',pos=(300,200))
       # player = FieldPlayer('playerredshirt0',home_region = 0, heading=Vector2(-1,0), pos=(300,50))
-      player = FieldPlayer('playerredshirt0',pitch, home=pitch.pos_from_region(11), heading=Vector2(-1,0) )
+
+      home =pitch.pos_from_region(11) 
+      player = FieldPlayer('playerredshirt0',pitch, home=home, heading=Vector2(-1,0) )
+
+      player.pos = Vector2(random.randint(10,WIDTH), random.randint(10,HEIGHT))
+
 
       def draw():
             screen.fill('white')

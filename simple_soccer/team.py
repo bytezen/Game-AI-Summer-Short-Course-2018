@@ -1,6 +1,7 @@
 from field_player import GoalKeeper, FieldPlayer
 
 import player_states as PState
+import team_state as TeamState
 from soccer_pitch import SoccerPitch
 from support_spot_calculator import SupportSpotCalculator
 from fsm import StateMachine
@@ -86,6 +87,8 @@ class SoccerTeam:
         self.view = View(display_model)
         self.view.model = self
         self.side = side
+        self._entity_manager = entity_manager
+        self._dispatcher = dispatcher
 
         if side == HOME:
             self.color = pg.Color('red')
@@ -113,13 +116,16 @@ class SoccerTeam:
         self.dist_sq_to_ball_from_closest_player = sys.float_info.max
         self.support_spot_calculator = SupportSpotCalculator()
         self.fsm = StateMachine(self)
+        self.fsm.current_state = TeamState.prepare_for_kickoff
+        self.fsm.previous_state = TeamState.prepare_for_kickoff
+        self.fsm.global_state = None 
 
 
     def create_players(self):
         players = []
 
         if self.home_team:
-            regions = [self.pitch.pos_from_region(region) for region in [16,9,11,12,14] ]
+            regions = [self.pitch.pos_from_region(region) for region in [11,16,15,4,3] ]
         else:
             regions = [self.pitch.pos_from_region(region) for region in [1,6,8,3,5] ]
 
@@ -129,20 +135,26 @@ class SoccerTeam:
         else:
             image_file = 'playerblueshirt'
 
+
         players.append( GoalKeeper(image_file+'0',
-                                   home=regions[0],
-                                   heading=Vector2(-1,0)
+                                   self.pitch,
+                                   team = self,
+                                   home = regions[0],
+                                   heading = self.init_heading
                                    ) )
 
         # rest of the team
-        for region,img in regions[1:],player_images:
-            player = FieldPlayer(img,
-                                 home=region,
-                                 heading=Vector2(-1,0)
+        for idx, region in enumerate(regions[1:]):
+            player = FieldPlayer(image_file + str(idx),
+                                 self.pitch,
+                                 team = self,
+                                 home= region,
+                                 heading=self.init_heading
                                  ) 
 
-            self.model.entityManager.register_entity(player)
             players.append( player )
+            if idx == 0:
+                player.pos = (400, 300)
 
         return players
 
@@ -156,7 +168,7 @@ class SoccerTeam:
 
     def draw(self,screen):
         for player in self.players:
-            player.draw(screen)
+            player.draw()
 
         self.view.draw(screen)
 
@@ -223,7 +235,8 @@ class SoccerTeam:
         pass
 
     def all_players_at_home(self):
-        pass
+        return all( [p.at_home for p in self.players])
+
     
     @property
     def home_team(self):
@@ -285,7 +298,7 @@ if __name__ == '__main__':
 
     def draw():
         mock_pitch.draw(screen)
-        # home_team.draw(screen) 
+        home_team.draw(screen) 
 
     pgzrun.go()
 

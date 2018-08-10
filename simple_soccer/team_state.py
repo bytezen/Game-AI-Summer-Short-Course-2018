@@ -16,11 +16,6 @@ class Attacking(fsm.State):
                  klass._instance = klass()
             return klass._instance
 
-      def instance(klass):
-            if klass._instance == None:
-                 klass._instance = klass()
-            return klass._instance
-
       def enter(self, team):
             pass
 
@@ -41,11 +36,6 @@ class Defending(fsm.State):
       name = 'Defending'
 
       @classmethod
-      def instance(klass):
-            if klass._instance == None:
-                 klass._instance = klass()
-            return klass._instance
-
       def instance(klass):
             if klass._instance == None:
                  klass._instance = klass()
@@ -84,6 +74,8 @@ class PrepareForKickoff(fsm.State):
             team.return_all_field_players_home()
 
       def execute(self, team):
+            if team.all_players_at_home and team.opponent.all_players_at_home:
+                  team.fsm.change_state( defending )
             pass
 
       def exit(self, team):
@@ -94,16 +86,9 @@ class PrepareForKickoff(fsm.State):
 
 
 
-
-global_player = GlobalPlayerState.instance()
-chase_ball = ChaseBall.instance()
-support_attacker = SupportAttacker.instance()
-return_home = ReturnToHomeRegion.instance()
-wait = Wait.instance()
-kick_ball = KickBall.instance()
-dribble = Dribble.instance()
-receive_ball = ReceiveBall.instance
-
+defending = Defending.instance()
+prepare_for_kickoff = PrepareForKickoff.instance()
+attacking = Attacking.instance()
 
 
 
