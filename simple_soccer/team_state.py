@@ -2,7 +2,7 @@ import fsm
 
 
 def change_player_home_regions(team, new_regions):
-      for player,region in zip(team, new_regions):
+      for player,region in zip(team(), new_regions):
             team.set_player_home_region(player,region)
 
 class Attacking(fsm.State):
@@ -34,6 +34,8 @@ class Defending(fsm.State):
       _instance = None
 
       name = 'Defending'
+      home_regions = [1,6,8,3,5]
+      away_regions = [16,9,11,12,14]
 
       @classmethod
       def instance(klass):
@@ -42,7 +44,10 @@ class Defending(fsm.State):
             return klass._instance
 
       def enter(self, team):
-            pass
+           if team.side == 'HOME':
+                 change_player_home_regions(team, Defending.home_regions)
+           else:
+                 change_player_home_regions(team, Defending.away_regions)
 
       def execute(self, team):
             pass

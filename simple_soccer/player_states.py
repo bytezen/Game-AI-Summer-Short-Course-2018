@@ -7,6 +7,16 @@ class GlobalPlayerState:
                  klass._instance = klass()
             return klass._instance
 
+      def enter(self,player):
+            pass
+
+      def execute(self,player):
+            if player.ball_within_receiving_range() and player.is_controlling_player():
+                  player.speed = player.max_speed_with_ball
+
+      def exit(self,player):
+            pass
+
 class ChaseBall:
       _instance = None
 
@@ -51,8 +61,8 @@ class Wait:
             if not player.pitch.game_on:
                   player.steering.target = player.home
 
-      def  execute(self, player):
-            if not player.at_target:
+      def execute(self, player):
+            if not player.at_target(player.steering.target):
                   player.arrive_on()
             else:
                   player.arrive_off()

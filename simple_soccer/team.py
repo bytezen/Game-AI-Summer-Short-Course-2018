@@ -24,7 +24,6 @@ class View:
     BORDER_COLOR = pg.Color('khaki')
     POS = Vector2(100,0)
 
-
     def __init__(self, display_model):
         self.show_model = display_model
         self.data_model = None
@@ -55,7 +54,7 @@ class View:
 
             # show the controlling team and player at the top of the display
             if self.show_model.show_controlling_team and self.data_model.in_control :
-                _s.draw.text:(self.team_model.team + ' in control ')
+                _s.draw.text(self.team_model.team + ' in control ')
 
             if self.data_model.controlling_player != None:
                 _s.draw.text('Controlling Player: ' + self.data_model.controlling_player.pId, color=c)
@@ -106,7 +105,7 @@ class SoccerTeam:
             raise ValueError ( "side must be either 'HOME' or 'AWAY' " )
 
         self.players = self.create_players()
-        self.opponents = []
+        self.opponent = None
 
         self._controlling_player = None
         self._supporting_player = None
@@ -120,6 +119,8 @@ class SoccerTeam:
         self.fsm.previous_state = TeamState.prepare_for_kickoff
         self.fsm.global_state = None 
 
+    def __call__(self):
+        return self.players
 
     def create_players(self):
         players = []
@@ -131,9 +132,9 @@ class SoccerTeam:
 
         # goal keeper
         if self.side == HOME:
-            image_file = 'playerredshirt'
+            image_file = 'redshirt'
         else:
-            image_file = 'playerblueshirt'
+            image_file = 'blueshirt'
 
 
         players.append( GoalKeeper(image_file+'0',
@@ -162,9 +163,12 @@ class SoccerTeam:
 
     def calculate_closest_player_to_ball(self):
         closest_so_far = sys.float_info.max
+        print('distances to closes player', self.players)
 
-        distances = [ p.pos.distance_to( self.pitch.ball ) for p in self.players ]
+        print('this is the ball position: ', self.pitch.ball() )
+        distances = [ p.exact_pos.distance_to( self.pitch.ball() ) for p in self.players ]
 
+        return min(distances)
 
     def draw(self,screen):
         for player in self.players:
@@ -173,7 +177,7 @@ class SoccerTeam:
         self.view.draw(screen)
 
 
-    def update(self):
+    def update(self,dt):
         #calculate this once per frame
         self.calculate_closest_player_to_ball()
 
@@ -183,15 +187,14 @@ class SoccerTeam:
         self.fsm.update()
 
         #update each player
-        for player in players:
-            player.update()
+        for player in self.players:
+            player.update(dt)
 
 
     def return_all_field_players_home(self):
         for player in self.players:
-
             dispatcher.dispatch_message(Message.SEND_MSG_IMMEDIATELY,
-                                        1,player.id,Message.GO_HOME,None)
+                                        -1,player.id,Message.GO_HOME,None)
 
     def can_shoot(self, ball_pos, power, shot_target = Vector2()):
         pass
@@ -288,13 +291,27 @@ if __name__ == '__main__':
     import pgzrun
     import soccer_pitch
     import team
+    import model as Model
+    import field_player
 
     WIDTH = 800
     HEIGHT = 600
 
+    #initialize the parameters
+    model = Model.initial_model
+
+    field_player.BasePlayer.initialize_class_parameters(max_speed_with_ball = model.player_max_speed_with_ball,
+                                                        receiving_range = model.player_receiving_range)
+
     mock_pitch = soccer_pitch.SoccerPitch(WIDTH,HEIGHT)
 
     home_team = team.SoccerTeam( HOME, mock_pitch )
+    away_team = team.SoccerTeam( AWAY, mock_pitch )
+    home_team.opponent = away_team
+    away_team.opponent = home_team
+
+    def update(dt):
+        home_team.update(dt)
 
     def draw():
         mock_pitch.draw(screen)

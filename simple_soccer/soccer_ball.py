@@ -131,8 +131,11 @@ class Ball(MovingEntity):
         self.model = kwargs['model']
 
         #testing
-##        self.predicted_position = None
-##        self.display_list = []
+        ##        self.predicted_position = None
+        ##        self.display_list = []
+    def __call__(self):
+        return Vector2(self.pos)
+
 
     def update(self):
         #debug

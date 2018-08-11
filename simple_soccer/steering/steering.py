@@ -78,8 +78,6 @@ class SteeringBehaviors:
     #     general turn behaviors on/off      #
     ##                                      ##
     ##                                      ##
-    
-
 
     def on(self, behavior):
         self._flags |= behavior
@@ -90,10 +88,10 @@ class SteeringBehaviors:
 
     def all_off(self):
         self._flags = Behavior.NONE
-            
+
     def is_on(self, behavior):
         return self._flags & behavior > 0
-        
+
     def toggle_behavior(self, behavior):
         self._flags ^= behavior
 
@@ -103,68 +101,65 @@ class SteeringBehaviors:
     #             Calculate Force            #
     ##                                      ##
     ##                                      ##
-    
-
-       
 
     def calculate(self):
         self.steering_force *= 0
         entity = self._entity
-        
+
         # Tag vehicles within range
         # as a pre-step for calculating flocking
-        if self.is_on(Behavior.ALIGNMENT) \
-           or self.is_on(Behavior.SEPARATION) \
-           or self.is_on(Behavior.COHESION):
-            
+
+        # if self.is_on(Behavior.ALIGNMENT) \
+        #    or self.is_on(Behavior.SEPARATION) \
+        #    or self.is_on(Behavior.COHESION):
+
+        if self.is_on(Behavior.SEPARATION):
+
             entity.world.tag_vehicles_in_view_range(entity, entity.world.agents, FlockingParams.view_distance)
-            
 
         if self.is_on(Behavior.SEEK):
             self.steering_force += self.seek( self._entity.world.crosshair )
 
-        if self.is_on(Behavior.ARRIVE):     
+        if self.is_on(Behavior.ARRIVE):
             self.steering_force += self.arrive( self._entity.world.crosshair)
 
-        if self.is_on(Behavior.FLEE):             
-            self.steering_force += self.flee( self._entity.world.crosshair)
-            
-        if self.is_on(Behavior.PURSUIT):                  
+        # if self.is_on(Behavior.FLEE):
+        #     self.steering_force += self.flee( self._entity.world.crosshair)
+
+        if self.is_on(Behavior.PURSUIT):
             self.steering_force += self.pursuit( self._entity.pursuit_target )
-            
-        if self.is_on(Behavior.EVADE):             
-            self.steering_force += self.evade( self._entity.evade_target )
 
-        if self.is_on(Behavior.WANDER):                  
-            self.steering_force += self.wander()
+        # if self.is_on(Behavior.EVADE):
+        #     self.steering_force += self.evade( self._entity.evade_target )
 
-        if self.is_on(Behavior.OBSTACLE_AVOIDANCE):
-            self.steering_force += self.obstacle_avoidance( self._entity.world.obstacles )
-            
-        if self.is_on(Behavior.WALL_AVOIDANCE):
-            self.steering_force += self.wall_avoidance( self._entity.world.walls )
+        # if self.is_on(Behavior.WANDER):
+        #     self.steering_force += self.wander()
+
+        # if self.is_on(Behavior.OBSTACLE_AVOIDANCE):
+        #     self.steering_force += self.obstacle_avoidance( self._entity.world.obstacles )
+
+        # if self.is_on(Behavior.WALL_AVOIDANCE):
+        #     self.steering_force += self.wall_avoidance( self._entity.world.walls )
 
         if self.is_on(Behavior.INTERPOSE):
             self.steering_force += self.interpose( *self._entity.targets )
 
-        if self.is_on(Behavior.HIDE):
-            self.steering_force += self.hide( self._entity.hunter, self._entity.world.obstacles )
+        # if self.is_on(Behavior.HIDE):
+        #     self.steering_force += self.hide( self._entity.hunter, self._entity.world.obstacles )
 
-        if self.is_on(Behavior.FOLLOW_PATH):
-            self.steering_force += self.follow_path( self.path )
-            
-        if self.is_on(Behavior.OFFSET_PURSUIT):
-            self.steering_force += self.offset_pursuit( self._entity.leader,
-                                                         Vector2(BehaviorParams.offset_pursuit_offset))
-            
+        # if self.is_on(Behavior.FOLLOW_PATH):
+        #     self.steering_force += self.follow_path( self.path )
+
+        # if self.is_on(Behavior.OFFSET_PURSUIT):
+        #     self.steering_force += self.offset_pursuit( self._entity.leader,
+                                                         # Vector2(BehaviorParams.offset_pursuit_offset))
+
         if self.is_on(Behavior.SEPARATION):
             self.steering_force += self.separation( self._entity.world.agents )
 
-        if self.is_on(Behavior.ALIGNMENT):
-            self.steering_force += self.alignment( self._entity.world.agents )
-                                                     
-                                                     
-            
+        # if self.is_on(Behavior.ALIGNMENT):
+        #     self.steering_force += self.alignment( self._entity.world.agents )
+
         return self.steering_force
 
     ##                                      ##

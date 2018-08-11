@@ -140,8 +140,6 @@ class SoccerPitch:
         self.home_goal.draw(surface)
         self.away_goal.draw(surface)
 
-
-
         #penalty_box - left
         goal = self.home_goal.rect        
         pb = pg.Rect(0, 0, goal.width * 3.0, field.height * 0.5)

@@ -35,6 +35,8 @@ class Params:
     player_max_force = 30
     player_kick_frequency = 8 
     player_max_turn_rate = 15 
+    player_max_speed_with_ball = 15
+    player_receiving_range = 50
 
 class Managers:
     entity_manager = entity_manager.EntityManager.instance() 

@@ -197,11 +197,17 @@ class MovingEntity(BaseEntity):
 
         self._side = self._heading.rotate(90)
 
-
     @property
     def side(self):
         return self._side
         
+    # @property
+    # def exact_pos(self):
+        # return Vector2(self.pos)
+
+    # @exact_pos.setter
+    # def exact_pos(self,vec):
+        # self.pos = tuple(vec)
 
 if __name__ == "__main__":
     #import pygame as pg
