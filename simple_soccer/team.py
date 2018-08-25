@@ -27,6 +27,7 @@ class View:
     def __init__(self, display_model):
         self.show_model = display_model
         self.data_model = None
+        #TODO: wrap this as a renderer and compose it with the class
         self._screen = pgzero.screen.Screen(pg.Surface(( 600, 50 )))
         self._screen.surface.get_rect().center = (400, 30)
         self._screen.fill((100,100,100))
@@ -114,10 +115,14 @@ class SoccerTeam:
 
         self.dist_sq_to_ball_from_closest_player = sys.float_info.max
         self.support_spot_calculator = SupportSpotCalculator()
+
         self.fsm = StateMachine(self)
-        self.fsm.current_state = TeamState.prepare_for_kickoff
-        self.fsm.previous_state = TeamState.prepare_for_kickoff
+        self.fsm.current_state = TeamState.defending
+        self.fsm.previous_state = TeamState.defending
         self.fsm.global_state = None 
+
+        #force the state enter logic to run for initial state
+        # self.fsm.current_state.enter(self)
 
     def __call__(self):
         return self.players
@@ -126,7 +131,7 @@ class SoccerTeam:
         players = []
 
         if self.home_team:
-            regions = [self.pitch.pos_from_region(region) for region in [11,16,15,4,3] ]
+            regions = [self.pitch.pos_from_region(region) for region in [11,16,15,4,2] ]
         else:
             regions = [self.pitch.pos_from_region(region) for region in [1,6,8,3,5] ]
 
@@ -137,12 +142,16 @@ class SoccerTeam:
             image_file = 'blueshirt'
 
 
-        players.append( GoalKeeper(image_file+'0',
+        goalkeeper = GoalKeeper(image_file+'0',
                                    self.pitch,
                                    team = self,
                                    home = regions[0],
                                    heading = self.init_heading
-                                   ) )
+                                   ) 
+
+        print(' goalkeeper velocity = ', goalkeeper.velocity)
+        players.append( goalkeeper)
+
 
         # rest of the team
         for idx, region in enumerate(regions[1:]):
@@ -154,27 +163,20 @@ class SoccerTeam:
                                  ) 
 
             players.append( player )
-            if idx == 0:
-                player.pos = (400, 300)
 
         return players
 
-
-
     def calculate_closest_player_to_ball(self):
         closest_so_far = sys.float_info.max
-        print('distances to closes player', self.players)
-
-        print('this is the ball position: ', self.pitch.ball() )
         distances = [ p.exact_pos.distance_to( self.pitch.ball() ) for p in self.players ]
 
         return min(distances)
 
     def draw(self,screen):
         for player in self.players:
-            player.draw()
+            player.draw(screen)
 
-        self.view.draw(screen)
+        # self.view.draw(screen)
 
 
     def update(self,dt):
@@ -186,10 +188,8 @@ class SoccerTeam:
         #kick off positions before the whistle is blown
         self.fsm.update()
 
-        #update each player
         for player in self.players:
             player.update(dt)
-
 
     def return_all_field_players_home(self):
         for player in self.players:
@@ -240,6 +240,8 @@ class SoccerTeam:
     def all_players_at_home(self):
         return all( [p.at_home for p in self.players])
 
+    def change_state(self, nextState):
+        self.fsm.change_state( nextState )
     
     @property
     def home_team(self):
@@ -276,7 +278,7 @@ class SoccerTeam:
     @supporting_player.setter
     def supporting_player(self, player):
         self._supporting_player = player
-        self.opponents.lost_control()
+        self.opponent.lost_control()
 
     def __repr__(self):
         if self.color == 'red':
@@ -305,17 +307,30 @@ if __name__ == '__main__':
 
     mock_pitch = soccer_pitch.SoccerPitch(WIDTH,HEIGHT)
 
+    # away_team = team.SoccerTeam( AWAY, mock_pitch )
     home_team = team.SoccerTeam( HOME, mock_pitch )
-    away_team = team.SoccerTeam( AWAY, mock_pitch )
-    home_team.opponent = away_team
-    away_team.opponent = home_team
+    # home_team.opponent = away_team
+    # away_team.opponent = home_team
+
+    # for p in home_team.players + away_team.players:
+        # Model.add_player(model,p)
+
+    for p in home_team.players:
+        Model.add_player(model, p)
+
+
+    #TEST 
+    home_team.players[0].exact_pos = (400,280)
+    print('Starting Player {} position = {} home ={}'.format(home_team.players[0].id, home_team.players[0].exact_pos, home_team.players[0].home))
 
     def update(dt):
         home_team.update(dt)
+        # away_team.update(dt)
 
     def draw():
         mock_pitch.draw(screen)
         home_team.draw(screen) 
+        # away_team.draw(screen)
 
     pgzrun.go()
 

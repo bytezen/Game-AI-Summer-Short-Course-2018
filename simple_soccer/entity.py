@@ -8,7 +8,7 @@ from pgzero.actor import Actor
 
 from pygame.math import Vector2
 #from pygame.math.Vector2 import *
-from math import radians, degrees
+import math 
 from enum import IntEnum
 
 
@@ -36,7 +36,7 @@ class BaseEntity(Actor):
         # of the actor
         self.bounding_radius = 0.5 * max(self._orig_surf.get_width(),
                                          self._orig_surf.get_height())
-        self.exact_pos = Vector2(self.pos)        
+        # self.exact_pos = Vector2(self.pos)        
 ##        print('Actor2 init: ',args)
 
         #Assign a unique ID and update the ID store for the next Actor
@@ -45,6 +45,12 @@ class BaseEntity(Actor):
 
         self.entity_type = EntityType.DEFAULT
 
+    @property
+    def exact_pos(self):
+        return Vector2(self.pos)
+    @exact_pos.setter
+    def exact_pos(self,value):
+        self.pos = tuple(value)
 
     def tag(self):
         self._tag = True
@@ -62,7 +68,6 @@ class BaseEntity(Actor):
 
     @angle.setter
     def angle(self,angle):
-        print('....before angle = ', self.pos, ' ', self._anchor_value)
         self._angle = angle
         pos = self.pos
         self._surf = pg.transform.rotate(self._orig_surf, angle)
@@ -70,7 +75,6 @@ class BaseEntity(Actor):
         self._calc_anchor()
         self.pos = pos
 
-        print('....after angle = ', self.pos)
 
     def update(self, time_elapsed):
         raise NotImplementedError("please override this method in your entity class")
@@ -92,41 +96,47 @@ class MovingEntity(BaseEntity):
                      max_speed = -1,
                      max_force = -1,
                      max_turn_rate = -1,
+                     mass = 1,
                      *args,**kwargs):
         super().__init__(image,*args,**kwargs)
-        
-        self._heading = Vector2()
-        self._side = Vector2()
-        self._init_moving_props(**kwargs)
+
         self.prev_pos = self.pos
+        self._velocity = Vector2(velocity)
+        self.max_speed = max_speed
+        self.max_force = max_force
+        self.max_turn_rate = max_turn_rate
+        self.mass = mass
 
+    # def _init_moving_props(self,**kwargs):
+    #     try:
+    #         print('init moving props...kwargs = {} velocity = {}'.format(kwargs,kwargs['velocity']))
+    #     except:
+    #         pass
+        
+    #     # velocity
+    #     try: self.velocity = Vector2(kwargs['velocity'])
+    #     except: self.velocity = Vector2(0,0)
 
+    #     # max_speed
+    #     try: self.max_speed = kwargs['max_speed']
+    #     except: self.max_speed = -1
 
-    def _init_moving_props(self,**kwargs):
-        # velocity
-        try: self.velocity = Vector2(kwargs['velocity'])
-        except: self.velocity = Vector2(0,0)
+    #     # max_force
+    #     try: self.max_force = kwargs['max_force']
+    #     except: self.max_force = -1
 
-        # max_speed
-        try: self.max_speed = kwargs['max_speed']
-        except: self.max_speed = -1
+    #     # mass
+    #     try: self.mass = kwargs['mass']
+    #     except: self.mass = 1
 
-        # max_force
-        try: self.max_force = kwargs['max_force']
-        except: self.max_force = -1
-
-        # mass
-        try: self.mass = kwargs['mass']
-        except: self.mass = 1
-
-        # max_turn_rate
-        try: self.max_turn_rate = kwargs['max_turn_rate']
-        except: self.max_turn_rate = -1     
+    #     # max_turn_rate
+    #     try: self.max_turn_rate = kwargs['max_turn_rate']
+    #     except: self.max_turn_rate = -1     
 
 
     def rotate_heading_to_face_position(self, target):
         # vector to where we want to face
-        to_target = (target - self.pos).normalize_ip()
+        to_target = (target - self.exact_pos).normalize()
 
         # angle that we need to turn to get there
         angle = self.heading.angle_to( to_target )
@@ -141,8 +151,11 @@ class MovingEntity(BaseEntity):
             angle = self.max_turn_rate
 
         # turn us and also update our side vector
-        self._heading.rotate_ip( degrees(angle) )
-        self._side = self._heading.rotate( 90 )
+        # this should not be necessary since heading and side are derived
+        # from angle now
+
+        # self._heading.rotate_ip( math.degrees(angle) )
+        # self._side = self._heading.rotate( 90 )
 
         return False
 
@@ -164,18 +177,12 @@ class MovingEntity(BaseEntity):
         self._velocity = Vector2(value)
 
         if self._velocity.length() > 0:
-            # print(self._velocity, self._velocity.normalize(), type(self._velocity))
-            # print(self.set_direction)
-            # n = self._velocity.normalize()
-            # self.set_direction(n)
- 
-            self.set_orientation( self._velocity )
-            # self._heading = self._velocity.normalize()
-            # self._side = self._heading.rotate(90)
-        else:
-            self._heading *= 0
-            self._side *= 0
+            # self.set_orientation( self._velocity )
+            _,ang = self._velocity.as_polar()
+            self.angle = ang
 
+        # if the velocity is zero then we will not adjust the angle
+        # of the player. We will leave them facing the same position
     @property
     def speed(self):
         return self._velocity.length()
@@ -183,24 +190,26 @@ class MovingEntity(BaseEntity):
     @property
     def speed_sq(self):
         return self._velocity.length_sq()
-    
+
     @property
     def heading(self):
-        return self._heading
+        return Vector2(math.cos(self.angle), math.sin(self.angle))
+        # return self._heading
 
     @heading.setter
     def heading(self, value):
-        if abs(1.0 - value.length()) > 0.00001:
-            self._heading = value.normalize()
-        else:
-            self._heading = value
-
-        self._side = self._heading.rotate(90)
+        """ set the heading by passing a Vector2 or a float angle"""
+        try:
+            _,ang = value.as_polar()
+            self.angle = ang
+        except:
+            self.angle = value
 
     @property
     def side(self):
-        return self._side
-        
+        perp = math.radians(self.angle - 90.0)
+        return Vector2(math.cos(perp), math.sin(perp))
+ 
     # @property
     # def exact_pos(self):
         # return Vector2(self.pos)
@@ -219,21 +228,22 @@ if __name__ == "__main__":
     WIDTH = 500
     HEIGHT = 500
 
-    baddie = BaseEntity("target")
+    ball = MovingEntity('ball')
 
-    alien = Actor("boid1_small")
-    alien_ctr = alien.center
+    # baddie = BaseEntity("target")
 
-    foo = MovingEntity('boid1_small')
-    print(foo.velocity)
-    
-    
+    # alien = Actor("boid1_small")
+    # alien_ctr = alien.center
+
+    # foo = MovingEntity('boid1_small')
+    # print(foo.velocity)
+
 
     def draw():
         pass
         screen.clear()
-        baddie.draw()
-        screen.draw.circle((250,250),5,(255,200,200))
+        # baddie.draw()
+        # screen.draw.circle((250,250),5,(255,200,200))
 
     def update(dt):
         pass

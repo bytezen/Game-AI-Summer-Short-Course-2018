@@ -59,17 +59,18 @@ class Wait:
       def enter(self, player):
             print('Player %s enters wait state' % player.id)
             if not player.pitch.game_on:
+                  print('   ....WaitState  setting target to home = {}'.format(player.home))
                   player.steering.target = player.home
 
       def execute(self, player):
             if not player.at_target(player.steering.target):
+                  print('   ....WaitState  player NOT at target setting arrive_on ')
                   player.arrive_on()
             else:
+                  print('   ....WaitState  player AT target setting arrive_off ')
                   player.arrive_off()
                   player.velocity *= 0
                   player.track_ball()
-
-
 
 class KickBall:
       _instance = None

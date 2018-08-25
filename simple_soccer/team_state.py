@@ -50,7 +50,8 @@ class Defending(fsm.State):
                  change_player_home_regions(team, Defending.away_regions)
 
       def execute(self, team):
-            pass
+            if team.in_control:
+                  team.change_state( attacking )
 
       def exit(self, team):
             pass
@@ -81,14 +82,12 @@ class PrepareForKickoff(fsm.State):
       def execute(self, team):
             if team.all_players_at_home and team.opponent.all_players_at_home:
                   team.fsm.change_state( defending )
-            pass
 
       def exit(self, team):
-            pass
+            team.pitch.game_on = True
 
       def on_message(self, msg):
             return False
-
 
 
 defending = Defending.instance()

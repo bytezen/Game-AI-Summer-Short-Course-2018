@@ -26,24 +26,29 @@ def _rotate(surface, angle, pivot, offset):
 
 
 
-def _clamp_vector(vector,min_length, max_length):
+def clamp_vector(vector,min_length, max_length):
     """make sure that a vectors length is between minimum and maximum
 
     Args:
         vector (Vector2) - the vector to scale
         min_length (positive float) - the minimum length of the vector
         max_length (positive float) - the maximum length of the vector
-
+ 
     Return:
-        the vector passed in is changed if necessary
+        Nothing, the vector is changed in place
     """
     length = vector.length()
     if length > .001:
         if length < min_length:
-            return vector.scale_to_length(min_length)
+            vector.scale_to_length(min_length)
+            # return vector.scale_to_length(min_length)
         elif length > max_length:
-            return vector.scale_to_length(max_length)
+            vector.scale_to_length(max_length)
+            # return vector.scale_to_length(max_length)
     else:
         return vector
-    
-    
+
+def clamp(val,a,b):
+    return min(max(val,a),b)
+
+
