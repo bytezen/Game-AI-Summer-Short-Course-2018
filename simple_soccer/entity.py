@@ -50,6 +50,7 @@ class BaseEntity(Actor):
         return Vector2(self.pos)
     @exact_pos.setter
     def exact_pos(self,value):
+        self.prev_pos = Vector2(self.pos)
         self.pos = tuple(value)
 
     def tag(self):
@@ -98,9 +99,12 @@ class MovingEntity(BaseEntity):
                      max_turn_rate = -1,
                      mass = 1,
                      *args,**kwargs):
+
+        print('MovingEntity.__init__ : image = ' , image)
         super().__init__(image,*args,**kwargs)
 
         self.prev_pos = self.pos
+        self.exact_pos = self.pos
         self._velocity = Vector2(velocity)
         self.max_speed = max_speed
         self.max_force = max_force
@@ -193,7 +197,10 @@ class MovingEntity(BaseEntity):
 
     @property
     def heading(self):
-        return Vector2(math.cos(self.angle), math.sin(self.angle))
+        #have to flip the heading positive rotation is counter-clockwise
+        #but up is negative in y direction
+        rads = math.radians(-1*self.angle)
+        return Vector2(math.cos(rads), math.sin(rads))
         # return self._heading
 
     @heading.setter
