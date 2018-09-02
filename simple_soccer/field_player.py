@@ -67,6 +67,7 @@ class BasePlayer(MovingEntity):
             self.fsm.update()
             self.steering.calculate()
 
+
             #DEBUG
             debug_output = False
             if self.id == 1:
@@ -81,9 +82,16 @@ class BasePlayer(MovingEntity):
                   braking_rate = 0.8
                   self.velocity *= braking_rate
 
+            # first calculate the speed change due to the force
+
+            #FORWARD COMPONENT CALC
+            forward_component = self.steering.forward_component()
+            speed = min(abs(forward_component), self.max_speed)
+            print('   forward_component={}  speed={}'.format(forward_component,speed))
+
             # first calculate the velocity change due to turning
-                  
             side_component = self.steering.side_component()
+
             # negative to change the direction of rotation to towards steering force
             dAngle = (side_component * self.max_turn_rate)
 
@@ -91,7 +99,7 @@ class BasePlayer(MovingEntity):
 
             # _turn = -side_component * turn_rate
             # player.angle = math.degrees(ang + rot_angle)
-            if abs(side_component) < 0.05 :
+            if abs(side_component) < 0.1 :
                   self.angle = -self.steering.steering_force.as_polar()[1]
                   # print('****')
                   print('   ** setting snapping angle.... ')
@@ -104,34 +112,16 @@ class BasePlayer(MovingEntity):
                   self.angle -= dAngle
 
             # is this needed ?
-            self.velocity = self.speed * self.heading
-            print('    velocity = {}'.format(self.velocity))
+            # self.velocity = self.speed * self.heading
+            # print('    velocity = {}'.format(self.velocity))
 
-            print('\------------\ \n')
-
-            # self.heading.rotate_ip(turning_force)
-            # this will indirectly update the heading of the player
-            # if abs(turning_rate) > 0.001:
-                  # this will automagically propogate to a new heading
-                  # and side vector
-                  # self.angle = math.degrees(turning_rate)
-                  # if debug_output:
-                        # print('   turning_rate updating angle and velocity. pVel = {}'.format(self.velocity), end= '   ')
-                        
-
-                  # _,angle = self.heading.as_polar()
-
-                  # print('angles: ', self.angle, turning_rate, self.heading.as_polar())
-                  # assert abs(angle - self.angle < .001 ), str(angle - self.angle)
-
-                  # self.velocity = self.speed * self.heading
-
-                  # if debug_output:
-                        # print('   new V = {}'.format(self.velocity))
 
             #FORWARD COMPONENT CALC
-
             # forward_component = self.steering.forward_component()
+            # dSpeed = (forward_component * self.max_speed)
+            # print('speed = ',dSpeed)
+
+            # self.velocity += (dSpeed/self.mass) * self.heading
             # if debug_output:
             #       print('    forward_component = {}; mass = {}'.format(forward_component, self.mass))
 
@@ -139,6 +129,7 @@ class BasePlayer(MovingEntity):
             # self.velocity += accel
 
             # self.exact_pos += self.velocity
+            self.exact_pos +=  speed * self.heading #self.velocity
 
             # if debug_output:
             #       print('   prevPos = {}  position={}'.format(self.prev_pos, self.exact_pos))

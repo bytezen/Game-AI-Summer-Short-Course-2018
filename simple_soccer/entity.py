@@ -181,13 +181,12 @@ class MovingEntity(BaseEntity):
         """
         self._velocity = Vector2(value)
 
+        # if the velocity is zero then we will not adjust the angle
+        # of the player. We will leave them facing the same position
         if self._velocity.length() > 0:
-            # self.set_orientation( self._velocity )
             _,ang = self._velocity.as_polar()
             self.angle = ang
 
-        # if the velocity is zero then we will not adjust the angle
-        # of the player. We will leave them facing the same position
     @property
     def speed(self):
         return self._velocity.length()

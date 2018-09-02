@@ -49,6 +49,7 @@ class ReturnToHomeRegion:
 
 class Wait:
       _instance = None
+      TEST_RUN_ONCE = True
 
       @classmethod
       def instance(klass):
@@ -63,6 +64,11 @@ class Wait:
                   player.steering.target = player.home
 
       def execute(self, player):
+            if Wait.TEST_RUN_ONCE:
+                  print('WaitState.execute [TESTING]: skipping logic')
+                  Wait.TEST_RUN_ONCE = False
+            return
+
             if not player.at_target(player.steering.target):
                   print('   ....WaitState  player NOT at target setting arrive_on ')
                   player.arrive_on()

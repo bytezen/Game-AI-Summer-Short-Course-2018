@@ -28,9 +28,10 @@ class Display:
     show_highlight_when_threatened = False
     show_frame_rate = False
     show_steering_force = True
-    steering_force_display_length = 1
+    steering_force_display_length = 50
     # state of the team displayed on screen
     show_team_state = True 
+    show_heading = True
 
 
 class Params:
@@ -59,10 +60,10 @@ class Params:
     player_kick_frequency = 8 
 
     player_mass = 3.0
-    player_max_force = 3.0
+    player_max_force = 1.0
     player_max_speed_with_ball = 1.2
-    player_max_speed = 1.6
-    player_max_turn_rate = 0.4 
+    player_max_speed =  1.6
+    player_max_turn_rate = 5 #0.4 
     player_scale = 1.0
 
     # when an opponent comes within this range the player will attempt to pass the ball. Players tend to pass more often, the higher the value

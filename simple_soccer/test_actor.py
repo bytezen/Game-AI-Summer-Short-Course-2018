@@ -37,8 +37,9 @@ player = Actor('redshirt0')
 heading = Heading(0)
 player.pos = 200,200
 player.angle = 50
-Heading.angle = player.angle
+heading.angle = player.angle
 
+speed = 1.6
 
 
 WIDTH = 400
@@ -48,7 +49,7 @@ mx,my,targetx,targety = 0,0,0,0
 frame = 0
 def draw():
     screen.fill((200,200,200))
-    if frame % 30 == 0:
+    if frame % 1  == 0:
         dy = targety - player.pos[1]
         dx = targetx - player.pos[0]
         print(dx,dy)
@@ -57,7 +58,10 @@ def draw():
         heading.angle = player.angle
         # print('angle = {}({})  heading = {}'.format(player.angle,
                                                     # radians(player.angle),
-                                                    # heading))
+                                                    # heading)) 
+    player.pos = ( player.pos[0] + speed * heading.heading.x,
+                   player.pos[1] + speed * heading.heading.y )
+
     player.draw()
 
     screen.draw.line( player.pos,

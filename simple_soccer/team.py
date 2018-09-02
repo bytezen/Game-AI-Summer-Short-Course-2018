@@ -142,6 +142,7 @@ class SoccerTeam:
             image_file = 'blueshirt'
 
 
+        print('create_players(): image_file, pitch = ', image_file, self.pitch,self,regions[0],self.init_heading)
         goalkeeper = GoalKeeper(image_file+'0',
                                    self.pitch,
                                    team = self,
@@ -302,8 +303,8 @@ if __name__ == '__main__':
     #initialize the parameters
     model = Model.initial_model
 
-    field_player.BasePlayer.initialize_class_parameters(max_speed_with_ball = model.player_max_speed_with_ball,
-                                                        receiving_range = model.player_receiving_range)
+    # field_player.BasePlayer.initialize_class_parameters(max_speed_with_ball = model.player_max_speed_with_ball,
+                                                        # receiving_range = model.player_receiving_range)
 
     mock_pitch = soccer_pitch.SoccerPitch(WIDTH,HEIGHT)
 

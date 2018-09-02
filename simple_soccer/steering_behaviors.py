@@ -143,11 +143,18 @@ class SteeringBehaviors:
     ##                                      ##
 
     def forward_component(self):
-        if self.steering_force.length_squared() < 0.001:
+        # make sure vector is not zero
+        if self.steering_force.length() < 0.001:
             return 0
 
+        norm_steering_force = self.steering_force.normalize()
+        fwd = self.player.heading
+        # dotprod = norm_steering_force.dot(fwd)
+        dotprod = self.steering_force.dot(fwd)
+
         # print('[SteeringBehaviors.forward_component] side, steering_force ',self.player.heading, self.steering_force)
-        return self.player.heading.dot(self.steering_force.normalize())
+        
+        return dotprod #self.player.heading.dot(self.steering_force.normalize())
 
     def side_component(self):
         # make sure vector is not zero
@@ -158,7 +165,7 @@ class SteeringBehaviors:
         side = self.player.side
         dotprod = norm_steering_force.dot(side)
 
-        print('[SteeringBehaviors.side_component] side . steering_force = {} . {} {}'.format(side, norm_steering_force, dotprod))
+        # print('[SteeringBehaviors.side_component] side . steering_force = {} . {} {}'.format(side, norm_steering_force, dotprod))
 
         return dotprod
 
@@ -172,6 +179,7 @@ class SteeringBehaviors:
         self.steering_force *= 0
         self.steering_force = self.sum_forces()
 
+
         util.clamp_vector(self.steering_force, 0, self.player.max_force)
 
         return self.steering_force
@@ -182,6 +190,7 @@ class SteeringBehaviors:
         if self.is_on(BehaviorType.SEPARATION):
             force += self.separation() * self.separation_multiplier
 
+            print('got here...')
             #DEBUG
             # if self.player.id == 1:
             #     print('[sum_forces]: summing separation force: {}'.format(force.length()))
