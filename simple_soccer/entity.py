@@ -11,7 +11,8 @@ from pygame.math import Vector2
 import math 
 from enum import IntEnum
 
-
+HALF_PI = math.pi * 0.5
+TAU = math.pi * 2.0
 
 class EntityType(IntEnum):
     DEFAULT = -1
@@ -163,12 +164,12 @@ class MovingEntity(BaseEntity):
 
         return False
 
-    def set_orientation(self, vec):
+    # def set_orientation(self, vec):
         """ sets the heading and side vector based on vec
         """
-        if vec.length() > 0:
-            self._heading = vec.normalize()
-            self._side = self._heading.rotate( 90 )
+        # if vec.length() > 0:
+            # self._heading = vec.normalize()
+            # self._side = self._heading.rotate( 90 )
 
     @property
     def velocity(self):
@@ -197,25 +198,24 @@ class MovingEntity(BaseEntity):
 
     @property
     def heading(self):
+        rads = math.radians(self.angle)
+
         #have to flip the heading positive rotation is counter-clockwise
         #but up is negative in y direction
-        rads = math.radians(-1*self.angle)
-        return Vector2(math.cos(rads), math.sin(rads))
-        # return self._heading
+        return Vector2(math.cos(rads), -1 * math.sin(rads)) 
 
-    @heading.setter
-    def heading(self, value):
-        """ set the heading by passing a Vector2 or a float angle"""
-        try:
-            _,ang = value.as_polar()
-            self.angle = ang
-        except:
-            self.angle = value
+    # @heading.setter
+    # def heading(self, value):
+    #     """ set the heading by passing a Vector2 or a float angle"""
+    #     try:
+    #         _,ang = value.as_polar()
+    #         self.angle = ang
+    #     except:
+            # self.angle = value
 
     @property
     def side(self):
-        perp = math.radians(self.angle - 90.0)
-        return Vector2(math.cos(perp), math.sin(perp))
+        return self.heading.rotate(90) 
  
     # @property
     # def exact_pos(self):

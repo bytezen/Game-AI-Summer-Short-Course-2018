@@ -50,7 +50,7 @@ class SteeringBehaviors:
 
         # Steering force should always be normalized!!!
         self.steering_force = Vector2()
-        self.target = None
+        self._target = None
 
     ##                                      ##
     ##                                      ##
@@ -128,6 +128,13 @@ class SteeringBehaviors:
     def untag(self):
         self.tagged = False
 
+    @property
+    def target(self):
+        return self._target
+
+    @target.setter
+    def target(self,value):
+        self._target = Vector2(value)
 
     ##                                      ##
     ##                                      ##
@@ -136,10 +143,24 @@ class SteeringBehaviors:
     ##                                      ##
 
     def forward_component(self):
-        return self.player.heading.dot(self.steering_force)
+        if self.steering_force.length_squared() < 0.001:
+            return 0
+
+        # print('[SteeringBehaviors.forward_component] side, steering_force ',self.player.heading, self.steering_force)
+        return self.player.heading.dot(self.steering_force.normalize())
 
     def side_component(self):
-        return self.player.side.dot(self.steering_force) 
+        # make sure vector is not zero
+        if self.steering_force.length() < 0.001:
+            return 0
+
+        norm_steering_force = self.steering_force.normalize()
+        side = self.player.side
+        dotprod = norm_steering_force.dot(side)
+
+        print('[SteeringBehaviors.side_component] side . steering_force = {} . {} {}'.format(side, norm_steering_force, dotprod))
+
+        return dotprod
 
     ##                                      ##
     ##                                      ##
@@ -162,8 +183,8 @@ class SteeringBehaviors:
             force += self.separation() * self.separation_multiplier
 
             #DEBUG
-            if self.player.id == 1:
-                print('[sum_forces]: summing separation force: {}'.format(force.length()))
+            # if self.player.id == 1:
+            #     print('[sum_forces]: summing separation force: {}'.format(force.length()))
 
             if not self.accumulate_force(force):
                 #DEBUG
@@ -181,8 +202,8 @@ class SteeringBehaviors:
             force += self.arrive( self.target, decelaration = Decelaration.FAST)
 
             #DEBUG
-            if self.player.id == 1:
-                print('[sum_forces]: summing arrive force: {}'.format(force.length()))
+            # if self.player.id == 1:
+            #     print('[sum_forces]: summing arrive force: {}'.format(force.length()))
 
             if not self.accumulate_force(force):
                 #DEBUG
@@ -249,14 +270,14 @@ class SteeringBehaviors:
     def arrive(self,target, decelaration=Decelaration.NORMAL):
         toTarget = target - self.player.exact_pos
         dist = toTarget.length()
-        print('[steering.arrive] distance = ',dist )
+        # print('[steering.arrive] distance = ',dist )
         if (dist * dist) > 1.0 :
             decelarationTweak = 0.3
             speed = dist * (decelaration * decelarationTweak )
 
-            print('[steering.arrive] speed = {}'.format( speed ),end='   ')
+            # print('[steering.arrive] speed = {}'.format( speed ),end='   ')
             speed = min(speed, self.player.max_speed)
-            print(' clamped speed = {}'.format(speed))
+            # print(' clamped speed = {}'.format(speed))
 
             desiredVelocity = toTarget * ( speed / dist )
             return desiredVelocity - self.player.velocity

@@ -9,7 +9,7 @@ WIDTH = 800
 HEIGHT = 600
 #initial mouse position
 mx,my = (0,0)
-targetx,targety = (0,0)
+targetx,targety = (100,100)
 
 #initialize the parameters
 model = Model.initial_model
@@ -25,7 +25,7 @@ player = test_team.players[0]
 # test_team.players[0].velocity = (-10,0)
 # test_team.players[0].home = (50,300)
 
-# player.arrive_on()
+player.arrive_on()
 # player.steering.target = mx,my
 
 #TODO: this is clunky and should be handled by the API
@@ -61,20 +61,24 @@ def draw():
 def update(dt):
     global steering_force, turn_force
 
-    test_team.update(dt)
     player.steering.target = targetx,targety
-    steering_force = player.steering.target - player.exact_pos
 
-    side_component = player.side.dot(steering_force.normalize())
-    _turn = -side_component * turn_rate
+    test_team.update(dt)
 
-    # player.angle = math.degrees(ang + rot_angle)
-    if abs(_turn) < 0.2 :
-        player.angle = -steering_force.as_polar()[1]
-    else:
-        player.angle += _turn
+    # Manually testing turning
+    # turn of the behaviors and run this code to test
 
-    # print('steering.side = ', side_component, '  turn = ', _turn, '  curr_ang = ', player.angle)
+    # steering_force = player.steering.target - player.exact_pos
+    # print('steering force = {} angle = {}'.format(player.steering.steering_force.normalize(), player.steering.steering_force.as_polar()[1]))
+
+    # side_component = player.side.dot(steering_force.normalize())
+    # _turn = -side_component * turn_rate
+
+    # if abs(_turn) < 0.2 :
+    #     player.angle = -steering_force.as_polar()[1]
+    # else:
+    #     player.angle += _turn
+
 
 
 def on_mouse_move(pos):

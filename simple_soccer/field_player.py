@@ -5,21 +5,22 @@ import player_states as PState
 from entity import MovingEntity
 from steering_behaviors import SteeringBehaviors, BehaviorType
 import util
+import math
 from config import Config
 
 class BasePlayer(MovingEntity):
-      max_speed_with_ball = None
-      receiving_range = None
+      # max_speed_with_ball = None
+      # receiving_range = None
 
-      @classmethod
-      def initialize_class_parameters(cls,**kwargs):
-            cls.max_speed_with_ball = kwargs['max_speed_with_ball']
-            cls.receiving_range = kwargs['receiving_range']
+      # @classmethod
+      # def initialize_class_parameters(cls,**kwargs):
+      #       cls.max_speed_with_ball = kwargs['max_speed_with_ball']
+      #       cls.receiving_range = kwargs['receiving_range']
 
       def __init__(self,image, pitch, team, home, heading, model = model.initial_model, **kwargs): 
-            super().__init__(image,
-                             mass = model.player_mass,
-                             **kwargs)
+            print('BasePlayer.__init__ -- image = ', image)
+            print('SUPER = ', super())
+            super().__init__('redshirt0') #image,  **kwargs)
 
             self.max_turn_rate = model.player_max_turn_rate
             self.max_force = model.player_max_force
@@ -30,6 +31,7 @@ class BasePlayer(MovingEntity):
 
             self.home = Vector2(home)
             self.pos = Vector2(home)
+            self.mass = model.player_mass
             # self.velocity = Vector2()
             # self.heading = Vector2(heading)
             _,self.angle = Vector2(heading).as_polar() 
@@ -42,10 +44,11 @@ class BasePlayer(MovingEntity):
                   # self.set_orientation(Vector2(heading))
 
             self.model = model
+            self.max_speed_with_ball = model.player_max_speed_with_ball
+            self.receiving_range = model.ball_within_receiving_range
             self.role = None
             self.pitch = pitch
             self.team = team
-            self.receiving_range = BasePlayer.receiving_range
 
             self.steering = SteeringBehaviors(self)
             self.steering.separation_on()
@@ -65,31 +68,81 @@ class BasePlayer(MovingEntity):
             self.steering.calculate()
 
             #DEBUG
+            debug_output = False
             if self.id == 1:
-                  print('player{} velocity: {}'.format(self.id,self.velocity))
+                  debug_output = False
+
+            if debug_output:
+                  print('UPDATE...')
+                  print('   player{} velocity: {}'.format(self.id,self.velocity))
                   print('       steering_force = {}'.format(self.steering.steering_force))
 
-            if self.steering.steering_force.length() < 0.0001:
+            if self.steering.steering_force.length() < 0.0001 and (self.velocity.length_squared() > 0.001):
                   braking_rate = 0.8
                   self.velocity *= braking_rate
 
             # first calculate the velocity change due to turning
-            turning_rate = util.clamp(self.steering.side_component(),
-                                      -self.max_turn_rate,
-                                      self.max_turn_rate)
+                  
+            side_component = self.steering.side_component()
+            # negative to change the direction of rotation to towards steering force
+            dAngle = (side_component * self.max_turn_rate)
+
+            # print('    side = {} {}\n    steering = {} {} '.format( self.side, self.side.as_polar(),self.steering.steering_force.normalize(),self.steering.steering_force.normalize().as_polar() ))
+
+            # _turn = -side_component * turn_rate
+            # player.angle = math.degrees(ang + rot_angle)
+            if abs(side_component) < 0.05 :
+                  self.angle = -self.steering.steering_force.as_polar()[1]
+                  # print('****')
+                  print('   ** setting snapping angle.... ')
+                  # print('****')
+                  # print('       side = {} {}'.format(self.side,self.side.as_polar()))
+                  # print('       heading = {} {}'.format(self.heading,self.heading.as_polar()))
+                  # print('       steering . heading = {} '.format(self.steering.steering_force.normalize().dot(self.heading)))
+            else:
+                  # print('   side_component = {}; incrementing angle by {}'.format(side_component,dAngle))
+                  self.angle -= dAngle
+
+            # is this needed ?
+            self.velocity = self.speed * self.heading
+            print('    velocity = {}'.format(self.velocity))
+
+            print('\------------\ \n')
+
             # self.heading.rotate_ip(turning_force)
             # this will indirectly update the heading of the player
-            if abs(turning_rate) > 0.001:
+            # if abs(turning_rate) > 0.001:
                   # this will automagically propogate to a new heading
                   # and side vector
-                  self.angle = turning_rate
-                  self.velocity = self.speed * self.heading
-            # self.heading.rotate_ip(turning_force)
+                  # self.angle = math.degrees(turning_rate)
+                  # if debug_output:
+                        # print('   turning_rate updating angle and velocity. pVel = {}'.format(self.velocity), end= '   ')
+                        
 
-            accel = self.heading *  self.steering.forward_component()/ self.mass 
-            self.velocity += accel
+                  # _,angle = self.heading.as_polar()
 
-            self.exact_pos += self.velocity
+                  # print('angles: ', self.angle, turning_rate, self.heading.as_polar())
+                  # assert abs(angle - self.angle < .001 ), str(angle - self.angle)
+
+                  # self.velocity = self.speed * self.heading
+
+                  # if debug_output:
+                        # print('   new V = {}'.format(self.velocity))
+
+            #FORWARD COMPONENT CALC
+
+            # forward_component = self.steering.forward_component()
+            # if debug_output:
+            #       print('    forward_component = {}; mass = {}'.format(forward_component, self.mass))
+
+            # accel = self.heading *  forward_component/ self.mass 
+            # self.velocity += accel
+
+            # self.exact_pos += self.velocity
+
+            # if debug_output:
+            #       print('   prevPos = {}  position={}'.format(self.prev_pos, self.exact_pos))
+            #       print('---END UPDATE\n\n')
 
       def draw(self,screen):
             super().draw()
@@ -97,6 +150,11 @@ class BasePlayer(MovingEntity):
             #
             # Show Rendering Aids - Steering_Force
             #
+
+            #DEBUG
+            screen.draw.circle( self.home, 10, (255,0,0) )
+            # if self.at_home():
+
 
             if self.model.show_steering_force:
                   screen.draw.line(self.exact_pos,
@@ -119,6 +177,15 @@ class BasePlayer(MovingEntity):
                   if len(states) > 0:
                         offset = self.exact_pos + ( self.heading  * 5) + Vector2(0,5)
                         screen.draw.text(states, offset)
+
+            if self.model.show_heading:
+                   screen.draw.line(self.exact_pos,
+                                    self.exact_pos + 50 * self.heading,
+                                    (0,255,0))
+                   screen.draw.line(self.exact_pos,
+                                    self.exact_pos + 50 * self.side,
+                                    (0,0,255))
+
 
       def ball_within_receiving_range(self):
             return self.exact_pos.distance_to(self.ball()) < self.receiving_range
