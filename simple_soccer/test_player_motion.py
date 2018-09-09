@@ -45,6 +45,8 @@ side_component = 0
 max_turn_rate = 0.15
 turn_rate = 5.0 
 
+print('max speeds: {}'.format([p.max_speed for p in test_team.players if p.id == 1]))
+
 def draw():
     mock_pitch.draw(screen)
     #draw target

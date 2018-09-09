@@ -49,6 +49,7 @@ class BaseEntity(Actor):
     @property
     def exact_pos(self):
         return Vector2(self.pos)
+
     @exact_pos.setter
     def exact_pos(self,value):
         self.prev_pos = Vector2(self.pos)
@@ -121,7 +122,6 @@ class MovingEntity(BaseEntity):
                      mass = 1,
                      *args,**kwargs):
 
-        print('MovingEntity.__init__ : image = ' , image)
         super().__init__(image,*args,**kwargs)
 
         self.prev_pos = self.pos
@@ -172,6 +172,9 @@ class MovingEntity(BaseEntity):
             # self._heading = vec.normalize()
             # self._side = self._heading.rotate( 90 )
 
+    def _update_velocity(self, value):
+        pass
+
     @property
     def velocity(self):
         return self._velocity
@@ -185,7 +188,7 @@ class MovingEntity(BaseEntity):
         # if the velocity is zero then we will not adjust the angle
         # of the player. We will leave them facing the same position
         if self._velocity.length() > 0:
-            self.heading = self._velocity
+            self._heading = self._velocity.normalize()
 
     @property
     def speed(self):
@@ -223,7 +226,6 @@ class MovingEntity(BaseEntity):
     @heading.setter
     def heading(self, value):
         self._heading = Vector2(value)
-        self._heading.normalize_ip()
 
         #heading and angle use different rotation directions for positive
         self.angle = -self._heading.as_polar()[1]
@@ -270,7 +272,6 @@ if __name__ == "__main__":
 
 
     def draw():
-        pass
         screen.clear()
         # baddie.draw()
         # screen.draw.circle((250,250),5,(255,200,200))
