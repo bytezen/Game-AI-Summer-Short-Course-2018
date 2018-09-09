@@ -56,25 +56,45 @@ class BaseEntity(Actor):
 
     def tag(self):
         self._tag = True
-        
+
     def untag(self):
         self._tag = False
 
     @property
     def tagged(self):
         return self._tag
-    
+
     @property
     def angle(self):
+        assert False
         return self._angle
 
     @angle.setter
     def angle(self,angle):
+        assert False
         self._angle = angle
         pos = self.pos
         self._surf = pg.transform.rotate(self._orig_surf, angle)
         self.width, self.height = self._surf.get_size()
         self._calc_anchor()
+        self.pos = pos
+
+    def _rotate_surface(self, phi):
+        """rotate the surface by phi around the anchor"""
+
+        #save the position to readjust after the rotation
+        pos = self.pos
+
+        #rotate the surface
+        self._surf = pg.transform.rotate(self._orig_surf, phi)
+
+        #update the width and height to reflect the changed bounding rect
+        self.width, self.height = self._surf.get_size()
+
+        #update the anchors for rendering as rotation around the anchor point
+        self._calc_anchor()
+
+        #restore the position
         self.pos = pos
 
 
@@ -107,36 +127,17 @@ class MovingEntity(BaseEntity):
         self.prev_pos = self.pos
         self.exact_pos = self.pos
         self._velocity = Vector2(velocity)
+
+        # check for zero velocity
+        if self._velocity.length_squared() < 0.001:
+            self._heading = Vector2(1,0)
+        else:
+            self._heading = self._velocity.normalize()
+
         self.max_speed = max_speed
         self.max_force = max_force
         self.max_turn_rate = max_turn_rate
         self.mass = mass
-
-    # def _init_moving_props(self,**kwargs):
-    #     try:
-    #         print('init moving props...kwargs = {} velocity = {}'.format(kwargs,kwargs['velocity']))
-    #     except:
-    #         pass
-        
-    #     # velocity
-    #     try: self.velocity = Vector2(kwargs['velocity'])
-    #     except: self.velocity = Vector2(0,0)
-
-    #     # max_speed
-    #     try: self.max_speed = kwargs['max_speed']
-    #     except: self.max_speed = -1
-
-    #     # max_force
-    #     try: self.max_force = kwargs['max_force']
-    #     except: self.max_force = -1
-
-    #     # mass
-    #     try: self.mass = kwargs['mass']
-    #     except: self.mass = 1
-
-    #     # max_turn_rate
-    #     try: self.max_turn_rate = kwargs['max_turn_rate']
-    #     except: self.max_turn_rate = -1     
 
 
     def rotate_heading_to_face_position(self, target):
@@ -184,8 +185,7 @@ class MovingEntity(BaseEntity):
         # if the velocity is zero then we will not adjust the angle
         # of the player. We will leave them facing the same position
         if self._velocity.length() > 0:
-            _,ang = self._velocity.as_polar()
-            self.angle = ang
+            self.heading = self._velocity
 
     @property
     def speed(self):
@@ -196,13 +196,37 @@ class MovingEntity(BaseEntity):
         return self._velocity.length_sq()
 
     @property
+    def angle(self):
+        return self._angle
+        # return self.heading.as_polar()[1]
+
+    @angle.setter
+    def angle(self,value):
+        """changes the heading to reflect a direction of value degrees"""
+
+        self._angle = value
+        #set the angle of the heading
+        self._heading.from_polar((1.0, -value))
+
+        #now rotate object to the new angle
+        self._rotate_surface(value)
+
+    @property
     def heading(self):
-        rads = math.radians(self.angle)
+        return self._heading
+        # rads = math.radians(self.angle)
 
         #have to flip the heading positive rotation is counter-clockwise
         #but up is negative in y direction
-        return Vector2(math.cos(rads), -1 * math.sin(rads)) 
+        # return Vector2(math.cos(rads), -1 * math.sin(rads)) 
 
+    @heading.setter
+    def heading(self, value):
+        self._heading = Vector2(value)
+        self._heading.normalize_ip()
+
+        #heading and angle use different rotation directions for positive
+        self.angle = -self._heading.as_polar()[1]
     # @heading.setter
     # def heading(self, value):
     #     """ set the heading by passing a Vector2 or a float angle"""

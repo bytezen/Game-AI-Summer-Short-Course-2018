@@ -87,7 +87,7 @@ class BasePlayer(MovingEntity):
             #FORWARD COMPONENT CALC
             forward_component = self.steering.forward_component()
             speed = min(abs(forward_component), self.max_speed)
-            print('   forward_component={}  speed={}'.format(forward_component,speed))
+            # print('   forward_component={}  speed={}'.format(forward_component,speed))
 
             # first calculate the velocity change due to turning
             side_component = self.steering.side_component()
@@ -102,7 +102,6 @@ class BasePlayer(MovingEntity):
             if abs(side_component) < 0.1 :
                   self.angle = -self.steering.steering_force.as_polar()[1]
                   # print('****')
-                  print('   ** setting snapping angle.... ')
                   # print('****')
                   # print('       side = {} {}'.format(self.side,self.side.as_polar()))
                   # print('       heading = {} {}'.format(self.heading,self.heading.as_polar()))

@@ -190,7 +190,6 @@ class SteeringBehaviors:
         if self.is_on(BehaviorType.SEPARATION):
             force += self.separation() * self.separation_multiplier
 
-            print('got here...')
             #DEBUG
             # if self.player.id == 1:
             #     print('[sum_forces]: summing separation force: {}'.format(force.length()))
