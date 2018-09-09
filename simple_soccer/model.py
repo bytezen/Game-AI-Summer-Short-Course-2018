@@ -62,7 +62,7 @@ class Params:
     player_mass = 3.0
     player_max_force = 1.0
     player_max_speed_with_ball = 1.2
-    player_max_speed =  1.6
+    player_max_speed =  3.6
     player_max_turn_rate = 5 #0.4 
     player_scale = 1.0
 

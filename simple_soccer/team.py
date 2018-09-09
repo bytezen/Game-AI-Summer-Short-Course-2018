@@ -322,7 +322,7 @@ if __name__ == '__main__':
 
     #TEST 
     home_team.players[0].exact_pos = (200,280)
-    print('Starting Player {} position = {} home ={}'.format(home_team.players[0].id, home_team.players[0].exact_pos, home_team.players[0].home))
+    home_team.players[1].exact_pos = (210,280)
 
     def update(dt):
         home_team.update(dt)

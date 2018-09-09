@@ -64,15 +64,14 @@ class Wait:
 
       def execute(self, player):
             if not player.at_target(player.steering.target):
-                  if player.id == 1:
-                        print('   ....WaitState  player NOT at target setting arrive_on ')
+                  # print('   ....WaitState  player NOT at target setting arrive_on ')
                   player.arrive_on()
             else:
-                  if player.id == 1:
-                        print('   ....WaitState  player AT target setting arrive_off ')
+                  # print('   ....WaitState  player AT target setting arrive_off ')
                   player.arrive_off()
                   player.velocity *= 0
                   player.track_ball()
+
 
 class KickBall:
       _instance = None

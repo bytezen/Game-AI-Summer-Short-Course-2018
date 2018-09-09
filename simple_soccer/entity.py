@@ -10,6 +10,7 @@ from pygame.math import Vector2
 #from pygame.math.Vector2 import *
 import math 
 from enum import IntEnum
+import util
 
 HALF_PI = math.pi * 0.5
 TAU = math.pi * 2.0
@@ -145,16 +146,24 @@ class MovingEntity(BaseEntity):
         to_target = (target - self.exact_pos).normalize()
 
         # angle that we need to turn to get there
-        angle = self.heading.angle_to( to_target )
+        angle = to_target.angle_to(self.heading)
 
         # are we pretty much there??
-        if angle < 0.00001:
+        if abs(angle) < 0.00001:
             return True 
 
         # we aren't there so change the angle but make sure it is
         # not bigger than we are allowed to turn
-        if angle > self.max_turn_rate:
-            angle = self.max_turn_rate
+        angle = util.clamp(angle,-self.max_turn_rate,self.max_turn_rate)
+
+
+        # if abs( angle ) > self.max_turn_rate:
+            # angle = self.max_turn_rate
+
+        if self.id == 2:
+            print('rotate_heading_to_face: ', self.exact_pos, target, to_target )
+            print('    angle = ', angle)
+            print('    heading before = ', self.heading.as_polar())
 
         # turn us and also update our side vector
         # this should not be necessary since heading and side are derived
@@ -163,6 +172,15 @@ class MovingEntity(BaseEntity):
         # self._heading.rotate_ip( math.degrees(angle) )
         # self._side = self._heading.rotate( 90 )
 
+        self.angle = self.angle + angle
+        # self._heading.rotate_ip(angle)
+        if self.id == 2:
+            print('    heading after = ', self.heading.as_polar())
+
+
+        # self.angle = angle
+
+        # print('[Entity.rotate_heading_to_face_position]: changing angle to: {}'.format(angle))
         return False
 
     # def set_orientation(self, vec):
@@ -228,7 +246,7 @@ class MovingEntity(BaseEntity):
         self._heading = Vector2(value)
 
         #heading and angle use different rotation directions for positive
-        self.angle = -self._heading.as_polar()[1]
+        self._angle = -self._heading.as_polar()[1]
     # @heading.setter
     # def heading(self, value):
     #     """ set the heading by passing a Vector2 or a float angle"""

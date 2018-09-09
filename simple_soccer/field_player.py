@@ -89,13 +89,6 @@ class BasePlayer(MovingEntity):
             self.velocity = (speed / self.mass) * self.heading
 
 
-            if speed > 0:
-                  print('[FieldPlayer.update] side_component: {} forward_component: {}'.format(side_component,forward_component))
-                  print('updating with speed: {} vel: {}'.format(speed, self.velocity)) 
-
-            # is this needed ?
-            # self.velocity = self.speed * self.heading
-
             #FORWARD COMPONENT CALC
             # accel = self.heading *  forward_component/ self.mass 
             # self.velocity += accel
@@ -103,12 +96,7 @@ class BasePlayer(MovingEntity):
             # self.exact_pos += self.velocity
 
             # self.exact_pos +=  speed * self.heading #self.velocity
-            if self.velocity.length() > 0:
-                  print('   prevPos: {}'.format(self.exact_pos),end='   ')
-                  print('..adding vel...',end= '  ')
-                  self.exact_pos = self.exact_pos + self.velocity
-                  # self.exact_pos += self.velocity
-                  print('   newPos: {}'.format(self.exact_pos))
+            self.exact_pos = self.exact_pos + self.velocity
 
             # if debug_output:
             #       print('   prevPos = {}  position={}'.format(self.prev_pos, self.exact_pos))
@@ -124,6 +112,9 @@ class BasePlayer(MovingEntity):
             #DEBUG
             screen.draw.circle( self.home, 10, (255,0,0) )
             # if self.at_home():
+
+            #print ID
+            screen.draw.text(str(self.id), self.exact_pos + Vector2(0,-20))
 
 
             if self.model.show_steering_force:
